@@ -1,17 +1,13 @@
 const pgp = require('pg-promise')();
 require('dotenv').config();
 
-// Determine if we are running locally or in production on Render
-const isProduction = process.env.NODE_ENV === 'production' || process.env.DB_SSL === 'true';
+// Fallback to separate variables locally, but prefer the all-in-one URL string
+const connectionString = process.env.DATABASE_URL || 
+  `postgresql://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}:${process.env.DB_PORT || 5432}/${process.env.DB_NAME}`;
 
 const db = pgp({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'campus_eats_db',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASS || 'yourpassword',
-  // Enforces secure connection parameters natively for Neon Cloud
-  ssl: isProduction ? { rejectUnauthorized: false } : false,
+  connectionString: connectionString,
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
 });
 
 module.exports = db;
