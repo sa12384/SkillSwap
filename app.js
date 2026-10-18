@@ -1,4 +1,3 @@
-
 const express = require('express');
 require('dotenv').config();
 
@@ -28,21 +27,17 @@ const PORT = process.env.PORT || 3000;
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 
-
 const skillRoutes = require('./routes/skills');
 app.use('/api/skills', skillRoutes);
 
-
 const exchangeRequestRoutes = require('./routes/exchangeRequests');
 app.use('/api/exchange-requests', exchangeRequestRoutes);
-
 
 const studentRoutes = require('./routes/students');
 app.use('/api/students', studentRoutes);
 
 const dashboardRoutes = require('./routes/dashboard');
 app.use('/api/dashboard', dashboardRoutes);
-
 
 const adminRoutes = require('./routes/admin');
 app.use('/api/admin', adminRoutes);
@@ -52,9 +47,6 @@ app.use('/api/sessions', sessionRoutes);
 
 const reviewRoutes = require('./routes/reviews');
 app.use('/api/reviews', reviewRoutes);
-
-
-
 
 app.listen(PORT, () => {
     console.log(`SkillSwap website running at http://localhost:${PORT}`);
