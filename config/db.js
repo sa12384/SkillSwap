@@ -1,16 +1,14 @@
-
-const { Pool } = require('pg');
+const pgp = require('pg-promise')();
 require('dotenv').config();
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DATABASE_URL
-        ? { rejectUnauthorized: false }
-        : false
+const db = pgp({
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 5432,
+  database: process.env.DB_NAME || 'campus_eats_db',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASS || 'yourpassword',
+  // This turns on SSL encryption for Neon cloud, but leaves it off for local dev
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
 });
 
-pool.on('error', (err) => {
-    console.error('Unexpected PostgreSQL error:', err.message);
-});
-
-module.exports = pool;
+module.exports = db;
