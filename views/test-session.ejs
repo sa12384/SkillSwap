@@ -1,0 +1,88 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Session Scheduling</title>
+</head>
+<body>
+    <h1>Schedule a Test Session</h1>
+
+    <form id="sessionForm">
+        <label>Session title:</label><br>
+        <input name="title" value="Data Analysis Skill Exchange" required><br><br>
+
+        <label>Description:</label><br>
+        <textarea name="description">Practice and exchange skills.</textarea><br><br>
+
+        <label>Session date:</label><br>
+        <input type="date" name="sessionDate" required><br><br>
+
+        <label>Start time:</label><br>
+        <input type="time" name="startTime" required><br><br>
+
+        <label>End time:</label><br>
+        <input type="time" name="endTime" required><br><br>
+
+        <button type="submit">Schedule Session</button>
+    </form>
+
+    <p id="message"></p>
+
+    <script>
+        const form = document.getElementById('sessionForm');
+        const message = document.getElementById('message');
+
+        // Set the date to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const dateString =
+            tomorrow.getFullYear() + '-' +
+            String(tomorrow.getMonth() + 1).padStart(2, '0') + '-' +
+            String(tomorrow.getDate()).padStart(2, '0');
+
+        form.sessionDate.value = dateString;
+        form.startTime.value = '10:00';
+        form.endTime.value = '11:00';
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                message.textContent = 'Please log in first.';
+                return;
+            }
+
+            const data = {
+                requestId: 1,
+                title: form.title.value,
+                description: form.description.value,
+                sessionDate: form.sessionDate.value,
+                startTime: form.startTime.value,
+                endTime: form.endTime.value
+            };
+
+            try {
+                const response = await fetch('/api/sessions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                message.textContent =
+                    result.message || 'Request completed.';
+            } catch (error) {
+                message.textContent = 'Could not contact the server.';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,295 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reviews and Ratings | SkillSwap</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6fb;
+            color: #202a3b;
+        }
+
+        header {
+            background: #172554;
+            color: white;
+            padding: 18px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        header a {
+            color: white;
+            text-decoration: none;
+            margin-left: 16px;
+        }
+
+        main {
+            max-width: 900px;
+            margin: 35px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #e3e8f1;
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 22px;
+        }
+
+        h1, h2 { margin-top: 0; }
+
+        label {
+            display: block;
+            margin: 15px 0 8px;
+            font-weight: bold;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccd4e2;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        button {
+            margin-top: 16px;
+            padding: 12px 18px;
+            border: 0;
+            border-radius: 8px;
+            background: #3457d5;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .summary {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .stars {
+            color: #e5a000;
+            font-size: 22px;
+            letter-spacing: 2px;
+        }
+
+        .review {
+            border-top: 1px solid #e3e8f1;
+            padding: 18px 0;
+        }
+
+        .muted { color: #6b7280; }
+        .message { margin-top: 14px; }
+        .error { color: #b42332; }
+        .success { color: #147d54; }
+    </style>
+</head>
+
+<body>
+<header>
+    <strong>SkillSwap | Reviews</strong>
+    <nav>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/profile">Profile</a>
+    </nav>
+</header>
+
+<main>
+    <h1>Reviews and Ratings</h1>
+    <p class="muted">
+        Share your learning experience and help build trust in SkillSwap.
+    </p>
+
+    <section class="card">
+        <h2>Student rating</h2>
+
+        <label for="studentId">Student ID to review or view</label>
+        <input id="studentId" type="number" min="1"
+               placeholder="Enter the student's user ID" required>
+
+        <button id="loadButton" type="button">View reviews</button>
+
+        <div id="summary" class="summary" aria-live="polite"></div>
+        <div id="reviewsList"></div>
+    </section>
+
+    <section class="card">
+        <h2>Write a review</h2>
+
+        <form id="reviewForm">
+            <label for="reviewedUserId">Student ID</label>
+            <input id="reviewedUserId" type="number" min="1"
+                   placeholder="Enter the student's user ID" required>
+
+            <label for="rating">Your rating</label>
+            <select id="rating" required>
+                <option value="">Select a rating</option>
+                <option value="5">5 - Excellent</option>
+                <option value="4">4 - Very good</option>
+                <option value="3">3 - Good</option>
+                <option value="2">2 - Fair</option>
+                <option value="1">1 - Poor</option>
+            </select>
+
+            <label for="comment">Comment</label>
+            <textarea id="comment" maxlength="1000"
+                      placeholder="Describe your experience (optional)"></textarea>
+
+            <button id="submitButton" type="submit">
+                Submit review
+            </button>
+        </form>
+
+        <p id="message" class="message" role="status"></p>
+    </section>
+</main>
+
+<script>
+(() => {
+    const token = localStorage.getItem('token');
+
+    const $ = id => document.getElementById(id);
+
+    function showMessage(text, type = '') {
+        $('message').textContent = text;
+        $('message').className = 'message ' + type;
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, char => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        })[char]);
+    }
+
+    async function api(url, options = {}) {
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+                ...(token ? { Authorization: 'Bearer ' + token } : {}),
+                ...(options.headers || {})
+            }
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Request failed.');
+        }
+
+        return data;
+    }
+
+    async function loadReviews() {
+        const id = Number($('studentId').value);
+
+        if (!Number.isInteger(id) || id < 1) {
+            showMessage('Enter a valid student ID.', 'error');
+            return;
+        }
+
+        $('summary').textContent = 'Loading reviews...';
+        $('reviewsList').replaceChildren();
+
+        try {
+            const data = await api('/api/reviews/user/' + id);
+            const summary = data.summary;
+
+            $('summary').innerHTML =
+                '<strong>' + escapeHtml(summary.average_rating) +
+                ' / 5</strong> <span class="stars">' +
+                '★'.repeat(Math.round(summary.average_rating)) +
+                '☆'.repeat(5 - Math.round(summary.average_rating)) +
+                '</span><div class="muted">' +
+                escapeHtml(summary.total_reviews) + ' review(s)</div>';
+
+            if (!data.reviews.length) {
+                $('reviewsList').textContent = 'No reviews yet.';
+                return;
+            }
+
+            $('reviewsList').innerHTML = data.reviews.map(review => `
+                <article class="review">
+                    <strong>${escapeHtml(review.reviewer_name)}</strong>
+                    <div class="stars" aria-label="${escapeHtml(review.rating)} out of 5 stars">
+                        ${'★'.repeat(Number(review.rating))}
+                        ${'☆'.repeat(5 - Number(review.rating))}
+                    </div>
+                    <p>${escapeHtml(review.comment || 'No written comment.')}</p>
+                </article>
+            `).join('');
+        } catch (error) {
+            $('summary').textContent = '';
+            showMessage(error.message, 'error');
+        }
+    }
+
+    $('loadButton').addEventListener('click', loadReviews);
+
+    $('reviewForm').addEventListener('submit', async event => {
+        event.preventDefault();
+
+        if (!token) {
+            showMessage('Please log in before submitting a review.', 'error');
+            return;
+        }
+
+        const reviewed_user_id = Number($('reviewedUserId').value);
+        const rating = Number($('rating').value);
+        const comment = $('comment').value.trim();
+
+        $('submitButton').disabled = true;
+        showMessage('Submitting review...');
+
+        try {
+            const result = await api('/api/reviews', {
+                method: 'POST',
+                body: JSON.stringify({
+                    reviewed_user_id,
+                    rating,
+                    comment
+                })
+            });
+
+            showMessage(result.message, 'success');
+
+            $('studentId').value = reviewed_user_id;
+            $('reviewForm').reset();
+
+            await loadReviews();
+        } catch (error) {
+            showMessage(error.message, 'error');
+        } finally {
+            $('submitButton').disabled = false;
+        }
+    });
+})();
+</script>
+</body>
+</html>

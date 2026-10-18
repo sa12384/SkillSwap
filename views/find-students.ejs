@@ -1,0 +1,248 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Students | SkillSwap</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+
+        <div class="logo">
+            Skill<span>Swap</span>
+        </div>
+
+        
+<div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/skills">Explore Skills</a>
+    <a href="/find-students" class="active">Find Students</a>
+    <a href="/requests">Requests</a>
+    <a href="/profile">Profile</a>
+</div>
+
+    </nav>
+
+    
+<main class="skills-page">
+    <h1>Find Students</h1>
+    <p>Connect with students who can teach skills you want to learn.</p>
+
+    <p id="pageMessage">Loading students...</p>
+    <div id="studentsList"></div>
+
+    
+<div id="exchangeForm" style="display: none; margin-top: 20px;">
+    <h2>Request Skill Exchange</h2>
+    <p id="selectedStudent"></p>
+
+    <form id="requestForm">
+        <label for="offeredSkill">Skill I can teach</label>
+        <select id="offeredSkill" required>
+            <option value="">Choose a skill</option>
+        </select>
+
+        <br><br>
+
+        <label for="requestedSkill">Skill I want to learn</label>
+        <select id="requestedSkill" required>
+            <option value="">Choose a skill</option>
+        </select>
+
+        <br><br>
+
+        <button type="submit">Send Request</button>
+        <button type="button" id="cancelRequest">Cancel</button>
+    </form>
+
+    <p id="requestMessage" role="status"></p>
+</div>
+
+</main>
+
+<script>
+    async function loadStudents() {
+        const token = localStorage.getItem('token');
+        const message = document.getElementById('pageMessage');
+        const studentsList = document.getElementById('studentsList');
+
+        if (!token) {
+            message.textContent = 'Please log in to find students.';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/students', {
+                headers: {
+                    Authorization: 'Bearer ' + token
+                }
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                message.textContent =
+                    data.message || 'Could not load students.';
+                return;
+            }
+
+            studentsList.innerHTML = '';
+
+            if (data.students.length === 0) {
+                message.textContent = 'No other students found yet.';
+                return;
+            }
+
+            message.textContent =
+                'Found ' + data.students.length + ' student(s).';
+
+            data.students.forEach(student => {
+                const card = document.createElement('div');
+                card.className = 'skill-card';
+
+                const name = document.createElement('h3');
+                name.textContent = student.name;
+
+                const bio = document.createElement('p');
+                bio.textContent = student.bio || 'No bio provided yet.';
+
+                
+card.appendChild(name);
+card.appendChild(bio);
+
+const requestButton = document.createElement('button');
+requestButton.textContent = 'Request Skill Exchange';
+requestButton.className = 'edit-profile-btn';
+
+
+document.getElementById('exchangeForm').dataset.receiverId = student.user_id;
+
+requestButton.addEventListener('click', async function () {
+    const token = localStorage.getItem('token');
+
+    try {
+        const response = await fetch('/api/skills', {
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.message || 'Could not load skills.');
+            return;
+        }
+
+        if (!data.skills || data.skills.length < 2) {
+            alert('At least two skills must exist in the database.');
+            return;
+        }
+
+        const offered = document.getElementById('offeredSkill');
+        const requested = document.getElementById('requestedSkill');
+
+        offered.innerHTML = '<option value="">Choose a skill</option>';
+        requested.innerHTML = '<option value="">Choose a skill</option>';
+
+        data.skills.forEach(skill => {
+            const option1 = document.createElement('option');
+            option1.value = skill.skill_id;
+            option1.textContent = skill.skill_name;
+            offered.appendChild(option1);
+
+            const option2 = document.createElement('option');
+            option2.value = skill.skill_id;
+            option2.textContent = skill.skill_name;
+            requested.appendChild(option2);
+        });
+
+        document.getElementById('selectedStudent').textContent =
+            'Requesting an exchange with ' + student.name;
+
+        document.getElementById('requestMessage').textContent = '';
+        document.getElementById('exchangeForm').style.display = 'block';
+
+    } catch (error) {
+        console.error(error);
+        alert('Could not load skills.');
+    }
+});
+
+
+card.appendChild(requestButton);
+studentsList.appendChild(card);
+
+            });
+
+        } catch (error) {
+            console.error('Error loading students:', error);
+            message.textContent = 'Could not connect to the server.';
+        }
+    }
+
+    loadStudents();
+
+    
+document.getElementById('cancelRequest').addEventListener('click', function () {
+    document.getElementById('exchangeForm').style.display = 'none';
+});
+
+document.getElementById('requestForm').addEventListener('submit', async function (event) {
+    event.preventDefault();
+
+    const token = localStorage.getItem('token');
+    const message = document.getElementById('requestMessage');
+
+    const offeredSkill = document.getElementById('offeredSkill').value;
+    const requestedSkill = document.getElementById('requestedSkill').value;
+
+    if (!offeredSkill || !requestedSkill) {
+        message.textContent = 'Please select both skills.';
+        return;
+    }
+
+    if (offeredSkill === requestedSkill) {
+        message.textContent = 'Please select two different skills.';
+        return;
+    }
+
+    message.textContent = 'Sending request...';
+
+    // The selected student's ID is stored when the form opens.
+    const receiverId = document.getElementById('exchangeForm').dataset.receiverId;
+
+    try {
+        const response = await fetch('/api/exchange-requests', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: 'Bearer ' + token
+            },
+            body: JSON.stringify({
+                receiver_id: receiverId,
+                offered_skill: offeredSkill,
+                requested_skill: requestedSkill
+            })
+        });
+
+        const data = await response.json();
+        message.textContent = data.message ||
+            (response.ok ? 'Request sent!' : 'Could not send request.');
+
+        if (response.ok) {
+            document.getElementById('requestForm').reset();
+        }
+    } catch (error) {
+        console.error(error);
+        message.textContent = 'Could not connect to the server.';
+    }
+});
+
+</script>
+
+</body>
+</html>

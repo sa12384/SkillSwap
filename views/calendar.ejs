@@ -1,0 +1,388 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Calendar | SkillSwap</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <main class="calendar-container">
+        <h1>My Calendar</h1>
+        <p>View your scheduled skill exchange sessions.</p>
+
+        
+<div class="calendar-actions">
+    <button type="button" onclick="loadSessions()">Refresh Sessions</button>
+    <a href="/dashboard">Back to Dashboard</a>
+</div>
+
+<section class="session-card">
+    <h2>Schedule a Session</h2>
+    <p>Arrange a time to exchange skills with another student.</p>
+
+    <form id="scheduleSessionForm">
+        <label for="requestId">Accepted Exchange Request</label>
+        <select id="requestId" name="requestId" required>
+            <option value="">Loading accepted requests...</option>
+        </select>
+
+        <p>
+            <label for="sessionTitle">Session Title</label><br>
+            <input
+                type="text"
+                id="sessionTitle"
+                name="title"
+                placeholder="e.g. Data Analysis Practice"
+                required
+            >
+        </p>
+
+        <p>
+            <label for="sessionDescription">Description</label><br>
+            <textarea
+                id="sessionDescription"
+                name="description"
+                placeholder="What will you learn or practise?"
+            ></textarea>
+        </p>
+
+        <p>
+            <label for="sessionDate">Date</label><br>
+            <input type="date" id="sessionDate" name="sessionDate" required>
+        </p>
+
+        <p>
+            <label for="startTime">Start Time</label><br>
+            <input type="time" id="startTime" name="startTime" required>
+        </p>
+
+        <p>
+            <label for="endTime">End Time</label><br>
+            <input type="time" id="endTime" name="endTime" required>
+        </p>
+
+        <button type="submit">Schedule Session</button>
+        <p id="scheduleMessage" role="status"></p>
+    </form>
+</section>
+
+
+        <p id="calendarMessage">Loading your sessions...</p>
+        <div id="sessionsList"></div>
+    </main>
+
+    
+```html
+<script>
+    const scheduleForm = document.getElementById('scheduleSessionForm');
+    const requestSelect = document.getElementById('requestId');
+    const scheduleMessage = document.getElementById('scheduleMessage');
+    const calendarMessage = document.getElementById('calendarMessage');
+    const sessionsList = document.getElementById('sessionsList');
+    const dateInput = document.getElementById('sessionDate');
+
+    // Get the login token
+    function getToken() {
+        return localStorage.getItem('token');
+    }
+
+    // Read the logged-in user safely
+    function getCurrentUser() {
+        try {
+            return JSON.parse(localStorage.getItem('user') || 'null');
+        } catch (error) {
+            return null;
+        }
+    }
+
+    // Safely read JSON responses from the API
+    async function readResponse(response) {
+        const text = await response.text();
+
+        if (!text) {
+            return {};
+        }
+
+        try {
+            return JSON.parse(text);
+        } catch (error) {
+            return {
+                message: text || 'The server returned an invalid response.'
+            };
+        }
+    }
+
+    // Set the minimum session date to today
+    function setMinimumDate() {
+        const today = new Date();
+
+        const localDate =
+            today.getFullYear() + '-' +
+            String(today.getMonth() + 1).padStart(2, '0') + '-' +
+            String(today.getDate()).padStart(2, '0');
+
+        dateInput.min = localDate;
+    }
+
+    setMinimumDate();
+
+    // Load accepted exchange requests
+    async function loadAcceptedRequests() {
+        const token = getToken();
+        const currentUser = getCurrentUser();
+
+        requestSelect.innerHTML = '';
+
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Select an accepted request';
+        requestSelect.appendChild(defaultOption);
+
+        if (!token || !currentUser) {
+            defaultOption.textContent = 'Please log in again';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/exchange-requests/accepted', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const result = await readResponse(response);
+
+            if (!response.ok) {
+                defaultOption.textContent =
+                    result.message || `Could not load requests (${response.status}).`;
+
+                console.error('Accepted requests error:', result);
+                return;
+            }
+
+            const requests = result.requests || [];
+
+            if (requests.length === 0) {
+                defaultOption.textContent =
+                    'No accepted requests available';
+                return;
+            }
+
+            requests.forEach(request => {
+                const option = document.createElement('option');
+
+                option.value = request.request_id;
+
+                const currentUserId = Number(currentUser.user_id);
+
+                const otherStudent =
+                    Number(request.requester_id) === currentUserId
+                        ? request.receiver_name
+                        : request.requester_name;
+
+                option.textContent =
+                    `${request.offered_skill_name || 'Offered skill'} ↔ ` +
+                    `${request.requested_skill_name || 'Requested skill'} ` +
+                    `(with ${otherStudent || 'another student'})`;
+
+                requestSelect.appendChild(option);
+            });
+
+        } catch (error) {
+            console.error('Load accepted requests error:', error);
+
+            defaultOption.textContent =
+                'Could not connect to server';
+        }
+    }
+
+    // Load and display scheduled sessions
+    async function loadSessions() {
+        const token = getToken();
+
+        sessionsList.innerHTML = '';
+        calendarMessage.textContent = 'Loading your sessions...';
+
+        if (!token) {
+            calendarMessage.textContent = 'Please log in to view your sessions.';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/sessions', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const result = await readResponse(response);
+
+            if (!response.ok) {
+                calendarMessage.textContent =
+                    result.message || `Could not load sessions (${response.status}).`;
+
+                console.error('Load sessions error:', result);
+                return;
+            }
+
+            const sessions = result.sessions || [];
+
+            if (sessions.length === 0) {
+                calendarMessage.textContent =
+                    'You have no scheduled sessions yet.';
+                return;
+            }
+
+            calendarMessage.textContent =
+                `Your scheduled sessions (${sessions.length})`;
+
+            sessions.forEach(session => {
+                const card = document.createElement('section');
+                card.className = 'session-card';
+
+                const title = document.createElement('h3');
+                title.textContent = session.title || 'Untitled session';
+
+                const participants = document.createElement('p');
+                participants.textContent =
+                    `Teacher: ${session.teacher_name || 'Unknown'} | ` +
+                    `Learner: ${session.learner_name || 'Unknown'}`;
+
+                const date = document.createElement('p');
+                const sessionDate = session.session_date
+                    ? String(session.session_date).slice(0, 10)
+                    : 'Date unavailable';
+
+                const startTime = String(session.start_time || '').slice(0, 5);
+                const endTime = String(session.end_time || '').slice(0, 5);
+
+                date.textContent =
+                    `Date: ${sessionDate} | Time: ${startTime}–${endTime}`;
+
+                const description = document.createElement('p');
+                description.textContent =
+                    session.description || 'No description provided.';
+
+                const status = document.createElement('p');
+                status.textContent = `Status: ${session.status || 'Scheduled'}`;
+
+                card.appendChild(title);
+                card.appendChild(participants);
+                card.appendChild(date);
+                card.appendChild(description);
+                card.appendChild(status);
+
+                sessionsList.appendChild(card);
+            });
+
+        } catch (error) {
+            console.error('Load sessions error:', error);
+
+            calendarMessage.textContent =
+                'Could not connect to the server while loading sessions.';
+        }
+    }
+
+    // Submit a new session
+    scheduleForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const token = getToken();
+
+        if (!token) {
+            scheduleMessage.textContent =
+                'Please log in again before scheduling a session.';
+            return;
+        }
+
+        const data = {
+            requestId: Number(requestSelect.value),
+            title: document.getElementById('sessionTitle').value.trim(),
+            description: document.getElementById('sessionDescription').value.trim(),
+            sessionDate: dateInput.value,
+            startTime: document.getElementById('startTime').value,
+            endTime: document.getElementById('endTime').value
+        };
+
+        if (!data.requestId) {
+            scheduleMessage.textContent =
+                'Please select an accepted exchange request.';
+            return;
+        }
+
+        if (!data.title || !data.sessionDate ||
+            !data.startTime || !data.endTime) {
+            scheduleMessage.textContent =
+                'Please fill in all required fields.';
+            return;
+        }
+
+        if (data.sessionDate < dateInput.min) {
+            scheduleMessage.textContent =
+                'Please select today or a future date.';
+            return;
+        }
+
+        if (data.startTime >= data.endTime) {
+            scheduleMessage.textContent =
+                'End time must be later than start time.';
+            return;
+        }
+
+        const submitButton = scheduleForm.querySelector(
+            'button[type="submit"]'
+        );
+
+        submitButton.disabled = true;
+        scheduleMessage.textContent = 'Scheduling session...';
+
+        try {
+            const response = await fetch('/api/sessions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await readResponse(response);
+
+            if (!response.ok) {
+                scheduleMessage.textContent =
+                    result.message ||
+                    `Could not schedule session (HTTP ${response.status}).`;
+
+                console.error('Schedule session API error:', result);
+                return;
+            }
+
+            scheduleMessage.textContent =
+                result.message || 'Session scheduled successfully!';
+
+            scheduleForm.reset();
+            setMinimumDate();
+
+            await loadAcceptedRequests();
+            await loadSessions();
+
+        } catch (error) {
+            console.error('Schedule session error:', error);
+
+            scheduleMessage.textContent =
+                'Could not connect to the server. Check your connection and server terminal.';
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
+
+    // Load page data when the calendar opens
+    loadAcceptedRequests();
+    loadSessions();
+</script>
+
+</body>
+</html>

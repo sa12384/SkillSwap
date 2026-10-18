@@ -1,0 +1,330 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore Skills | SkillSwap</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">SkillSwap</div>
+        
+<div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/skills">Explore Skills</a>
+    <a href="/find-students" class="active">Find Students</a>
+    <a href="/requests">Requests</a>
+    <a href="/profile">Profile</a>
+</div>
+
+    </nav>
+
+    <main class="skills-page">
+
+        <section class="skills-heading">
+            <h1>Explore Skills</h1>
+            <p>Discover new skills and connect with students who can help you learn.</p>
+        </section>
+
+        <section class="skills-search">
+            <input type="text" id="searchInput"
+                   placeholder="Search for a skill..."
+                   aria-label="Search for a skill">
+
+            <select id="categoryFilter" aria-label="Filter by category">
+                <option value="all">All Categories</option>
+            </select>
+        </section>
+
+        <p id="skillsMessage" role="status" aria-live="polite"></p>
+
+        <section class="skills-grid" id="skillsGrid"></section>
+
+        <p id="noResults" class="no-results" hidden>
+            No skills found. Try another search.
+        </p>
+
+        <section class="my-skills-section">
+            <h2>My Skills</h2>
+            <p>Add skills you can teach or skills you want to learn.</p>
+
+            <form id="addSkillForm">
+                <div class="form-group">
+                    <label for="skillSelect">Choose a skill</label>
+                    <select id="skillSelect" required>
+                        <option value="">Loading skills...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="skillType">I want to</label>
+                    <select id="skillType" required>
+                        <option value="teach">Teach this skill</option>
+                        <option value="learn">Learn this skill</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="proficiency">Proficiency</label>
+                    <select id="proficiency" required>
+                        <option value="Beginner">Beginner</option>
+                        <option value="Intermediate">Intermediate</option>
+                        <option value="Advanced">Advanced</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="auth-btn" id="addSkillButton">
+                    Add Skill
+                </button>
+            </form>
+
+            <p id="mySkillsMessage" role="status" aria-live="polite"></p>
+
+            <div class="my-skills-list">
+                <h3>Skills I Can Teach</h3>
+                <div id="teachSkills"></div>
+
+                <h3>Skills I Want to Learn</h3>
+                <div id="learnSkills"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <p>© 2026 SkillSwap. Learn together, grow together.</p>
+    </footer>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const skillsGrid = document.getElementById('skillsGrid');
+        const noResults = document.getElementById('noResults');
+        const skillsMessage = document.getElementById('skillsMessage');
+        const skillSelect = document.getElementById('skillSelect');
+        const addSkillForm = document.getElementById('addSkillForm');
+        const mySkillsMessage = document.getElementById('mySkillsMessage');
+
+        let allSkills = [];
+
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+
+        async function loadAvailableSkills() {
+            try {
+                const response = await fetch('/api/skills');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Could not load skills');
+                }
+
+                allSkills = data.skills || [];
+
+                skillSelect.innerHTML = '<option value="">Select a skill</option>';
+
+                const categories = new Map();
+
+                allSkills.forEach(function(skill) {
+                    const option = document.createElement('option');
+                    option.value = skill.skill_id;
+                    option.textContent = skill.skill_name;
+                    skillSelect.appendChild(option);
+
+                    if (skill.category_id !== null) {
+                        categories.set(skill.category_id, 'Category ' + skill.category_id);
+                    }
+                });
+
+                categoryFilter.innerHTML = '<option value="all">All Categories</option>';
+
+                categories.forEach(function(label, id) {
+                    const option = document.createElement('option');
+                    option.value = String(id);
+                    option.textContent = label;
+                    categoryFilter.appendChild(option);
+                });
+
+                renderSkills();
+
+                if (allSkills.length === 0) {
+                    skillsMessage.textContent = 'No skills have been added to the database yet.';
+                }
+            } catch (error) {
+                console.error('Load skills error:', error);
+                skillsMessage.textContent = 'Could not load skills. Please try refreshing.';
+            }
+        }
+
+        function renderSkills() {
+            const searchText = searchInput.value.toLowerCase().trim();
+            const selectedCategory = categoryFilter.value;
+
+            const filteredSkills = allSkills.filter(function(skill) {
+                const matchesSearch = skill.skill_name.toLowerCase().includes(searchText);
+                const matchesCategory = selectedCategory === 'all' ||
+                    String(skill.category_id) === selectedCategory;
+
+                return matchesSearch && matchesCategory;
+            });
+
+            skillsGrid.innerHTML = '';
+
+            filteredSkills.forEach(function(skill) {
+                const card = document.createElement('article');
+                card.className = 'skill-card';
+
+                const heading = document.createElement('h3');
+                heading.textContent = skill.skill_name;
+
+                const category = document.createElement('p');
+                category.textContent = skill.category_id === null
+                    ? 'Uncategorised'
+                    : 'Category ' + skill.category_id;
+
+                card.appendChild(heading);
+                card.appendChild(category);
+                skillsGrid.appendChild(card);
+            });
+
+            noResults.hidden = filteredSkills.length > 0;
+        }
+
+        async function loadMySkills() {
+            const token = getToken();
+
+            if (!token) {
+                mySkillsMessage.textContent = 'Log in to manage your skills.';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/skills/my-skills', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    mySkillsMessage.textContent =
+                        data.message || 'Could not load your skills.';
+                    return;
+                }
+
+                document.getElementById('teachSkills').innerHTML = '';
+                document.getElementById('learnSkills').innerHTML = '';
+
+                (data.skills || []).forEach(function(skill) {
+                    const item = document.createElement('div');
+                    item.className = 'skill-card';
+
+                    const title = document.createElement('h4');
+                    title.textContent = skill.skill_name;
+
+                    const level = document.createElement('p');
+                    level.textContent = 'Proficiency: ' + skill.proficiency;
+
+                    const removeButton = document.createElement('button');
+                    removeButton.type = 'button';
+                    removeButton.textContent = 'Remove';
+                    removeButton.addEventListener('click', function() {
+                        removeMySkill(skill.user_skill_id);
+                    });
+
+                    item.appendChild(title);
+                    item.appendChild(level);
+                    item.appendChild(removeButton);
+
+                    const target = skill.skill_type === 'teach'
+                        ? document.getElementById('teachSkills')
+                        : document.getElementById('learnSkills');
+
+                    target.appendChild(item);
+                });
+            } catch (error) {
+                console.error('Load my skills error:', error);
+                mySkillsMessage.textContent = 'Could not load your skills.';
+            }
+        }
+
+        addSkillForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const token = getToken();
+
+            if (!token) {
+                mySkillsMessage.textContent = 'Please log in before adding skills.';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/skills', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        skill_id: skillSelect.value,
+                        skill_type: document.getElementById('skillType').value,
+                        proficiency: document.getElementById('proficiency').value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    mySkillsMessage.textContent =
+                        data.message || 'Could not add skill.';
+                    return;
+                }
+
+                mySkillsMessage.textContent = 'Skill added successfully!';
+                addSkillForm.reset();
+
+                await loadMySkills();
+            } catch (error) {
+                console.error('Add skill error:', error);
+                mySkillsMessage.textContent = 'Could not connect to the server.';
+            }
+        });
+
+        async function removeMySkill(userSkillId) {
+            const token = getToken();
+
+            try {
+                const response = await fetch('/api/skills/' + userSkillId, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    mySkillsMessage.textContent =
+                        data.message || 'Could not remove skill.';
+                    return;
+                }
+
+                mySkillsMessage.textContent = 'Skill removed successfully!';
+                await loadMySkills();
+            } catch (error) {
+                console.error('Remove skill error:', error);
+                mySkillsMessage.textContent = 'Could not connect to the server.';
+            }
+        }
+
+        searchInput.addEventListener('input', renderSkills);
+        categoryFilter.addEventListener('change', renderSkills);
+
+        loadAvailableSkills();
+        loadMySkills();
+    </script>
+
+</body>
+</html>

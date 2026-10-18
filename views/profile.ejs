@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - SkillSwap</title>
+    <link rel="stylesheet" href="/css/style.css">
+
+    <style>
+        .profile-container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .profile-avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: #102a43;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .profile-heading {
+            flex: 1;
+        }
+
+        .profile-heading h1 {
+            margin: 5px 0;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .profile-card {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            margin-bottom: 20px;
+        }
+
+        .profile-card h2 {
+            margin-top: 0;
+        }
+
+        .profile-details {
+            margin-top: 20px;
+        }
+
+        .detail-item {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            margin: 18px 0;
+        }
+
+        .detail-item small {
+            color: #64748b;
+        }
+
+        .detail-item p {
+            margin: 5px 0;
+        }
+
+        .profile-skill {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .profile-skill:last-child {
+            border-bottom: none;
+        }
+
+        .profile-skill-icon {
+            font-size: 24px;
+            background: #eff6ff;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .profile-skill h3 {
+            margin: 0 0 5px;
+            font-size: 16px;
+        }
+
+        .profile-skill span {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .profile-skill > div:nth-child(2) {
+            flex: 1;
+        }
+
+        .edit-profile-btn,
+        .add-skill-btn {
+            border: none;
+            background: #102a43;
+            color: white;
+            padding: 11px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .remove-btn {
+            border: none;
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .profile-statistics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 20px;
+            text-align: center;
+        }
+
+        .profile-stat strong {
+            display: block;
+            font-size: 28px;
+            color: #102a43;
+        }
+
+        .profile-stat span {
+            color: #64748b;
+        }
+
+        .preference-item {
+            display: flex;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .preference-item p {
+            margin: 5px 0;
+            color: #64748b;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .cancel-btn {
+            padding: 11px 18px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        .profile-message {
+            margin-top: 12px;
+            color: #166534;
+        }
+
+        @media (max-width: 600px) {
+            .profile-container {
+                margin-top: 25px;
+                padding: 0 14px;
+            }
+
+            .profile-header {
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body class="profile-page">
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="logo">Skill<span>Swap</span></div>
+
+        
+<div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/skills">Explore Skills</a>
+    <a href="/find-students">Find Students</a>
+    <a href="/requests">Requests</a>
+    <a href="/profile" class="active">Profile</a>
+    <a href="#" id="logoutBtn">Log Out</a>
+</div>
+
+    </nav>
+
+    <main class="profile-container">
+
+        <!-- Profile Header -->
+        <section class="profile-header">
+
+            <div class="profile-avatar" id="profileAvatar">SW</div>
+
+            <div class="profile-heading">
+                <p class="small-title">MY PROFILE</p>
+                <h1 id="displayName">Sangay Wangmo</h1>
+                <p>Student · SkillSwap Member</p>
+            </div>
+
+            <button type="button" class="edit-profile-btn" id="editProfileBtn">
+                ✏️ Edit Profile
+            </button>
+
+            
+<button type="button" class="edit-profile-btn" id="testRequestsBtn">
+    Test Exchange Requests
+</button>
+
+<p id="requestsTestMessage" role="status"></p>
+
+
+        </section>
+
+        <!-- Edit Profile Form -->
+        <section class="profile-card" id="editProfileForm" hidden>
+
+            <h2>Edit Your Profile</h2>
+            <p>Update your personal information below.</p>
+
+            <form id="profileForm">
+
+                <div class="form-group">
+                    <label for="profileName">Full Name</label>
+                    <input
+                        type="text"
+                        id="profileName"
+                        name="name"
+                        value="Sangay Wangmo"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="profileBio">About Me</label>
+                    <textarea
+                        id="profileBio"
+                        name="bio"
+                        rows="4"
+                        required
+                    >I am a student interested in technology, design and learning new skills. I enjoy sharing knowledge with other students and learning from people with different experiences.</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="profileInstitution">Institution</label>
+                    <input
+                        type="text"
+                        id="profileInstitution"
+                        name="institution"
+                        value="Sherubtse College"
+                        required
+                    >
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="edit-profile-btn">
+                        Save Changes
+                    </button>
+
+                    <button type="button" class="cancel-btn" id="cancelEditBtn">
+                        Cancel
+                    </button>
+                </div>
+
+            </form>
+
+            <p id="profileMessage" class="profile-message" role="status"></p>
+        </section>
+
+        <!-- Profile Content -->
+        <section class="profile-grid">
+
+            <!-- About Me -->
+            <div class="profile-card">
+
+                <h2>About Me</h2>
+                <p>Tell others about yourself.</p>
+
+                <div class="about-content">
+                    <p id="displayBio">
+                        I am a student interested in technology, design and learning new skills. I enjoy sharing knowledge with other students and learning from people with different experiences.
+                    </p>
+                </div>
+
+                <div class="profile-details">
+
+                    <div class="detail-item">
+                        <span>📧</span>
+                        <div>
+                            <small>Email</small>
+                            <p>sangay@example.com</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-item">
+                        <span>🎓</span>
+                        <div>
+                            <small>Role</small>
+                            <p>Student</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-item">
+                        <span>📍</span>
+                        <div>
+                            <small>Institution</small>
+                            <p id="displayInstitution">Sherubtse College</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Skills I Teach -->
+            <div class="profile-card">
+
+                <h2>Skills I Teach</h2>
+                <p>Skills you can share with others.</p>
+
+                <div class="profile-skill-list">
+
+                    <div class="profile-skill">
+                        <div class="profile-skill-icon">💻</div>
+                        <div>
+                            <h3>JavaScript</h3>
+                            <span>Intermediate</span>
+                        </div>
+                        <button type="button" class="remove-btn" aria-label="Remove JavaScript">×</button>
+                    </div>
+
+                    <div class="profile-skill">
+                        <div class="profile-skill-icon">🎨</div>
+                        <div>
+                            <h3>UI/UX Design</h3>
+                            <span>Intermediate</span>
+                        </div>
+                        <button type="button" class="remove-btn" aria-label="Remove UI/UX Design">×</button>
+                    </div>
+
+                    <div class="profile-skill">
+                        <div class="profile-skill-icon">🌐</div>
+                        <div>
+                            <h3>Web Development</h3>
+                            <span>Beginner</span>
+                        </div>
+                        <button type="button" class="remove-btn" aria-label="Remove Web Development">×</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Skills I Want to Learn -->
+            <div class="profile-card">
+
+                <h2>Skills I Want to Learn</h2>
+                <p>Skills you are interested in learning.</p>
+
+                <div class="profile-skill-list">
+
+                    <div class="profile-skill">
+                        <div class="profile-skill-icon">📸</div>
+                        <div>
+                            <h3>Photography</h3>
+                            <span>Beginner</span>
+                        </div>
+                        <button type="button" class="remove-btn" aria-label="Remove Photography">×</button>
+                    </div>
+
+                    <div class="profile-skill">
+                        <div class="profile-skill-icon">🎤</div>
+                        <div>
+                            <h3>Public Speaking</h3>
+                            <span>Beginner</span>
+                        </div>
+                        <button type="button" class="remove-btn" aria-label="Remove Public Speaking">×</button>
+                    </div>
+
+                    <div class="profile-skill">
+                        <div class="profile-skill-icon">🎵</div>
+                        <div>
+                            <h3>Music</h3>
+                            <span>Beginner</span>
+                        </div>
+                        <button type="button" class="remove-btn" aria-label="Remove Music">×</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Learning Preferences -->
+            <div class="profile-card">
+
+                <h2>Learning Preferences</h2>
+                <p>How you prefer to learn.</p>
+
+                <div class="preference-item">
+                    <span>📚</span>
+                    <div>
+                        <strong>Learning Style</strong>
+                        <p>Practical and hands-on</p>
+                    </div>
+                </div>
+
+                <div class="preference-item">
+                    <span>💻</span>
+                    <div>
+                        <strong>Session Type</strong>
+                        <p>Online or in-person</p>
+                    </div>
+                </div>
+
+                <div class="preference-item">
+                    <span>⏰</span>
+                    <div>
+                        <strong>Preferred Time</strong>
+                        <p>Evenings and weekends</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- Profile Statistics -->
+        <section class="profile-card profile-statistics">
+
+            <div class="profile-stat">
+                <strong>3</strong>
+                <span>Skills Shared</span>
+            </div>
+
+            <div class="profile-stat">
+                <strong>3</strong>
+                <span>Skills Learning</span>
+            </div>
+
+            <div class="profile-stat">
+                <strong>8</strong>
+                <span>Sessions Completed</span>
+            </div>
+
+            <div class="profile-stat">
+                <strong>12</strong>
+                <span>Students Connected</span>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-logo">Skill<span>Swap</span></div>
+        <p>Learn skills. Share knowledge. Grow together.</p>
+        <p class="copyright">© 2026 SkillSwap. All rights reserved.</p>
+    </footer>
+
+    <!-- Profile JavaScript -->
+    
+<script>
+    const editButton = document.getElementById('editProfileBtn');
+    const editForm = document.getElementById('editProfileForm');
+    const profileForm = document.getElementById('profileForm');
+    const cancelButton = document.getElementById('cancelEditBtn');
+
+    const nameInput = document.getElementById('profileName');
+    const bioInput = document.getElementById('profileBio');
+    const institutionInput = document.getElementById('profileInstitution');
+
+    const displayName = document.getElementById('displayName');
+    const displayBio = document.getElementById('displayBio');
+    const displayInstitution = document.getElementById('displayInstitution');
+    const profileAvatar = document.getElementById('profileAvatar');
+    const profileMessage = document.getElementById('profileMessage');
+
+    function updateAvatar(name) {
+        const initials = name
+            .trim()
+            .split(/\s+/)
+            .map(word => word[0])
+            .slice(0, 2)
+            .join('')
+            .toUpperCase();
+
+        profileAvatar.textContent = initials || 'S';
+    }
+
+    // Load the logged-in user's profile from PostgreSQL
+    async function loadProfile() {
+        const token = localStorage.getItem('token');
+
+       if (!token) {
+    profileMessage.textContent =
+        'No login token found. Please log in again.';
+    profileMessage.style.color = 'red';
+    return;
+}
+        try {
+            const response = await fetch('/api/auth/profile', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                profileMessage.textContent =
+                    data.message || 'Failed to load profile.';
+                profileMessage.style.color = 'red';
+
+                console.log('Profile API error:', response.status, data);
+                return;
+            }
+
+
+            const user = data.user;
+
+            displayName.textContent = user.name || 'Student';
+            nameInput.value = user.name || '';
+            bioInput.value = user.bio || '';
+            displayBio.textContent = user.bio || 'No bio added yet.';
+
+            updateAvatar(user.name || 'Student');
+
+            // Update the email and role displayed on the page
+            const detailParagraphs = document.querySelectorAll(
+                '.profile-details .detail-item p'
+            );
+
+            if (detailParagraphs[0]) {
+                detailParagraphs[0].textContent = user.email || '';
+            }
+
+            if (detailParagraphs[1]) {
+                detailParagraphs[1].textContent = user.role || 'Student';
+            }
+
+        } catch (error) {
+            console.error('Error loading profile:', error);
+            profileMessage.textContent =
+                'Could not load your profile. Please refresh the page.';
+        }
+    }
+
+    // Open the edit form
+    editButton.addEventListener('click', function () {
+        nameInput.value = displayName.textContent.trim();
+        bioInput.value = displayBio.textContent.trim();
+        institutionInput.value = displayInstitution.textContent.trim();
+
+        profileMessage.textContent = '';
+        editForm.hidden = false;
+        editForm.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+        nameInput.focus();
+    });
+
+    // Cancel editing
+    cancelButton.addEventListener('click', function () {
+        editForm.hidden = true;
+        profileMessage.textContent = '';
+    });
+
+    // Update the profile on the page
+    
+profileForm.addEventListener('submit', async function (event) {
+    event.preventDefault();
+
+    const token = localStorage.getItem('token');
+    const name = nameInput.value.trim();
+    const bio = bioInput.value.trim();
+
+    if (!token) {
+        profileMessage.textContent = 'Please log in again.';
+        profileMessage.style.color = 'red';
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/auth/profile', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ name, bio })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            profileMessage.textContent =
+                data.message || 'Could not update profile.';
+            profileMessage.style.color = 'red';
+            return;
+        }
+
+        displayName.textContent = data.user.name;
+        displayBio.textContent = data.user.bio || 'No bio added yet.';
+        nameInput.value = data.user.name;
+        bioInput.value = data.user.bio || '';
+
+        updateAvatar(data.user.name);
+
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        profileMessage.textContent = 'Profile updated successfully!';
+        profileMessage.style.color = 'green';
+
+        editForm.style.display = 'none';
+    } catch (error) {
+        console.error('Profile update error:', error);
+        profileMessage.textContent =
+            'Could not connect to the server. Please try again.';
+        profileMessage.style.color = 'red';
+    }
+});
+
+
+    // Remove sample skills from the page
+    document.querySelectorAll('.remove-btn').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const skill = button.closest('.profile-skill');
+
+            if (skill) {
+                skill.remove();
+            }
+        });
+    });
+
+    // Log out the current user
+    const logoutButton = document.getElementById('logoutBtn');
+
+    if (logoutButton) {
+        logoutButton.addEventListener('click', function (event) {
+            event.preventDefault();
+
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+
+            window.location.href = '/login';
+        });
+    }
+
+    // Load the profile when the page opens
+    loadProfile();
+
+    
+document.getElementById('testRequestsBtn').addEventListener('click', async function () {
+    const message = document.getElementById('requestsTestMessage');
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+        message.textContent = 'Please log in again.';
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/exchange-requests/received', {
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            message.textContent = data.message || 'Request failed.';
+            return;
+        }
+
+        message.textContent =
+            'Success! Received requests: ' + data.requests.length;
+    } catch (error) {
+        console.error('Exchange request test failed:', error);
+        message.textContent = 'Could not connect to the server.';
+    }
+});
+
+</script>
+
+</body>
+</html>

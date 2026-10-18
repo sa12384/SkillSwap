@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - SkillSwap</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="auth-page">
+    <nav class="navbar">
+        <div class="logo">Skill<span>Swap</span></div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/register" class="register-btn">Register</a>
+        </div>
+    </nav>
+    <main class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                
+                <h1>Welcome Back</h1>
+                <p>Login to continue your SkillSwap journey.</p>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email" required >
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required >
+                </div>
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="rememberMe"> Remember me
+                    </label>
+                    <a href="#">Forgot password?</a>
+                </div>
+                <button type="submit" class="auth-btn">Login</button>
+            </form>
+            <p id="loginMessage" role="status"></p>
+            <div class="auth-footer">
+                <p>
+                    Don't have an account? <a href="/register">Create an account</a>
+                </p>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <div class="footer-logo">Skill<span>Swap</span></div>
+        <p>Learn skills. Share knowledge. Grow together.</p>
+    </footer>
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const loginMessage = document.getElementById('loginMessage');
+        
+        loginForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            const loginButton = loginForm.querySelector('button[type="submit"]');
+            
+            loginButton.disabled = true;
+            loginMessage.textContent = 'Logging in...';
+            loginMessage.style.color = '';
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    loginMessage.textContent = data.message || 'Login failed. Please try again.';
+                    loginMessage.style.color = 'red';
+                    return;
+                }
+                
+                if (!data.token) {
+                    loginMessage.textContent = 'Login response did not contain a token. Please try again.';
+                    loginMessage.style.color = 'red';
+                    console.error('Login response is missing its token.');
+                    return;
+                }
+                
+                // Save the token and user details in this browser.
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                
+                // Verify that the token was saved before redirecting.
+                if (!localStorage.getItem('token')) {
+                    loginMessage.textContent = 'Could not save your login. Please check your browser settings.';
+                    loginMessage.style.color = 'red';
+                    return;
+                }
+                
+                loginMessage.textContent = 'Login successful!';
+                loginMessage.style.color = 'green';
+                
+                // Redirect user based on their account access level
+                window.location.assign(
+                    data.user.role === 'admin' ? '/admin-dashboard' : '/profile'
+                );
+                
+            } catch (error) {
+                console.error('Login request failed:', error);
+                loginMessage.textContent = 'Could not connect to the server. Please try again.';
+                loginMessage.style.color = 'red';
+            } finally {
+                loginButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

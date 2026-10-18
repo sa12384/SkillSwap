@@ -1,0 +1,142 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - SkillSwap</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="auth-page">
+
+    <nav class="navbar">
+        <div class="logo">Skill<span>Swap</span></div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/login">Login</a>
+        </div>
+    </nav>
+
+    <main class="auth-container">
+        <div class="auth-card register-card">
+
+            <div class="auth-header">
+                <div class="auth-icon">👋</div>
+                <h1>Create Your Account</h1>
+                <p>Join SkillSwap and start learning with your peers.</p>
+            </div>
+
+            <form id="registerForm">
+
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name"
+                           placeholder="Enter your full name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email"
+                           placeholder="Enter your email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password"
+                           placeholder="Create a password" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="bio">Short Bio</label>
+                    <textarea id="bio" name="bio"
+                              placeholder="Tell us a little about yourself"
+                              rows="3"></textarea>
+                </div>
+
+                <div class="terms">
+                    <label>
+                        <input type="checkbox" required>
+                        I agree to the SkillSwap terms and conditions.
+                    </label>
+                </div>
+
+                <p id="registerMessage" role="status" aria-live="polite"></p>
+
+                <button type="submit" class="auth-btn" id="registerButton">
+                    Create Account
+                </button>
+
+            </form>
+
+            <div class="auth-footer">
+                <p>
+                    Already have an account?
+                    <a href="/login">Login here</a>
+                </p>
+            </div>
+
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-logo">Skill<span>Swap</span></div>
+        <p>Learn skills. Share knowledge. Grow together.</p>
+    </footer>
+
+    <script>
+        const registerForm = document.getElementById('registerForm');
+        const registerMessage = document.getElementById('registerMessage');
+        const registerButton = document.getElementById('registerButton');
+
+        registerForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const bio = document.getElementById('bio').value.trim();
+
+            registerMessage.textContent = 'Creating your account...';
+            registerMessage.style.color = 'blue';
+            registerButton.disabled = true;
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, email, password, bio })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    registerMessage.textContent =
+                        data.message || 'Registration failed. Please try again.';
+                    registerMessage.style.color = 'red';
+                    return;
+                }
+
+                registerMessage.textContent =
+                    'Account registered successfully! You can now log in.';
+                registerMessage.style.color = 'green';
+
+                registerForm.reset();
+
+            } catch (error) {
+                console.error('Registration error:', error);
+
+                registerMessage.textContent =
+                    'Could not connect to the server. Please try again.';
+                registerMessage.style.color = 'red';
+
+            } finally {
+                registerButton.disabled = false;
+            }
+        });
+    </script>
+
+</body>
+</html>

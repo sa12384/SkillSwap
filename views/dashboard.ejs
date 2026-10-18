@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard - SkillSwap</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="dashboard-page">
+
+    <!-- Navigation -->
+    <nav class="navbar">
+
+        <div class="logo">
+            Skill<span>Swap</span>
+        </div>
+
+        
+<div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/skills">Explore Skills</a>
+    <a href="/find-students" class="active">Find Students</a>
+    <a href="/requests">Requests</a>
+    <a href="/profile">Profile</a>
+    
+</div>
+
+
+    </nav>
+
+
+    <!-- Dashboard -->
+    <main class="dashboard-container">
+
+        <!-- Welcome -->
+        <section class="dashboard-welcome">
+
+            <div>
+                <p class="small-title">STUDENT DASHBOARD</p>
+
+                <h1>Welcome back, Sangay! 👋</h1>
+
+                <p>
+                    Keep learning, sharing and connecting with your peers.
+                </p>
+            </div>
+
+            <a href="/skills" class="primary-btn">
+                Explore Skills
+            </a>
+
+        </section>
+
+
+        <!-- Statistics -->
+        <section class="stats-grid">
+
+            <div class="stat-card">
+                <div class="stat-icon">🎓</div>
+
+                <div>
+    <span>Skills You Teach</span>
+    <strong id="skillsTeachCount">0</strong>
+</div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-icon">📚</div>
+
+                <div>
+                    <span>Skills Learning</span>
+                    <strong id="skillsLearnCount">0</strong>
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-icon">🔄</div>
+
+                <div>
+                    <span>Pending Requests</span>
+                    <strong id="pendingRequestsCount">0</strong>
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-icon">📅</div>
+
+                <div>
+                    <span>Upcoming Sessions</span>
+                    <strong>2</strong>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- Main Dashboard Grid -->
+        <section class="dashboard-grid">
+
+
+            <!-- Skills -->
+            <div class="dashboard-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h2>My Skills</h2>
+                        <p>Skills you teach and want to learn.</p>
+                    </div>
+
+                    <a href="/profile">Manage</a>
+
+                </div>
+
+
+                <div class="skill-list" id="dashboardSkillsList">
+                    <p>Loading your skills...</p>
+                </div>
+
+            </div>
+
+
+            <!-- Requests -->
+            <div class="dashboard-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h2>Recent Requests</h2>
+                        <p>Your latest skill exchange requests.</p>
+                    </div>
+
+                    <a href="/requests">View All</a>
+
+                </div>
+
+
+                <div class="request-list" id="dashboardRequestsList">
+    <p>Loading your recent requests...</p>
+</div>
+
+                    <div class="request-item">
+
+                        <div class="avatar">
+                            JD
+                        </div>
+
+                        <div class="request-info">
+
+                            <h3>John Doe</h3>
+
+                            <p>
+                                Wants to learn JavaScript
+                            </p>
+
+                            <span>
+                                2 hours ago
+                            </span>
+
+                        </div>
+
+                        <button class="status pending">
+                            Pending
+                        </button>
+
+                    </div>
+
+
+                    <div class="request-item">
+
+                        <div class="avatar">
+                            TS
+                        </div>
+
+                        <div class="request-info">
+
+                            <h3>Tashi Sherpa</h3>
+
+                            <p>
+                                Wants to teach Photography
+                            </p>
+
+                            <span>
+                                Yesterday
+                            </span>
+
+                        </div>
+
+                        <button class="status accepted">
+                            Accepted
+                        </button>
+
+                    </div>
+
+
+                    <div class="request-item">
+
+                        <div class="avatar">
+                            PC
+                        </div>
+
+                        <div class="request-info">
+
+                            <h3>Pema Choden</h3>
+
+                            <p>
+                                Wants to learn UI/UX Design
+                            </p>
+
+                            <span>
+                                2 days ago
+                            </span>
+
+                        </div>
+
+                        <button class="status rejected">
+                            Rejected
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- Upcoming Sessions -->
+        <section class="dashboard-card sessions-card">
+
+            <div class="card-header">
+
+                <div>
+                    <h2>Upcoming Learning Sessions</h2>
+
+                    <p>
+                        Your scheduled SkillSwap sessions.
+                    </p>
+                </div>
+
+                <a href="/calendar">View Calendar</a>
+
+            </div>
+
+
+            <div class="sessions-list">
+
+
+                <div class="session-item">
+
+                    <div class="date-box">
+
+                        <span>OCT</span>
+
+                        <strong>12</strong>
+
+                    </div>
+
+
+                    <div class="session-info">
+
+                        <h3>JavaScript Fundamentals</h3>
+
+                        <p>
+                            With John Doe · 10:00 AM - 11:00 AM
+                        </p>
+
+                    </div>
+
+
+                    <span class="session-status">
+                        Scheduled
+                    </span>
+
+                </div>
+
+
+                <div class="session-item">
+
+                    <div class="date-box">
+
+                        <span>OCT</span>
+
+                        <strong>15</strong>
+
+                    </div>
+
+
+                    <div class="session-info">
+
+                        <h3>Photography Basics</h3>
+
+                        <p>
+                            With Tashi Sherpa · 2:00 PM - 3:00 PM
+                        </p>
+
+                    </div>
+
+
+                    <span class="session-status">
+                        Scheduled
+                    </span>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+        <!-- Quick Actions -->
+        <section class="quick-actions">
+
+            <a href="/skills" class="quick-action">
+                <span>🔎</span>
+                <div>
+                    <strong>Find a Skill</strong>
+                    <p>Discover something new to learn.</p>
+                </div>
+            </a>
+
+
+            <a href="/profile" class="quick-action">
+                <span>👤</span>
+                <div>
+                    <strong>Update Profile</strong>
+                    <p>Keep your information up to date.</p>
+                </div>
+            </a>
+
+
+            <a href="/calendar" class="quick-action">
+                <span>📅</span>
+                <div>
+                    <strong>Schedule Session</strong>
+                    <p>Plan your next learning session.</p>
+                </div>
+            </a>
+
+            
+<a href="/reviews" class="quick-action">
+    <span>⭐</span>
+    <div>
+        <strong>Reviews & Ratings</strong>
+        <p>Rate students and read their feedback.</p>
+    </div>
+</a>
+
+
+        </section>
+
+    </main>
+
+
+    <!-- Footer -->
+    <footer>
+
+        <div class="footer-logo">
+            Skill<span>Swap</span>
+        </div>
+
+        <p>
+            Learn skills. Share knowledge. Grow together.
+        </p>
+
+        <p class="copyright">
+            © 2026 SkillSwap. All rights reserved.
+        </p>
+
+    </footer>
+
+    <script>
+    async function loadDashboardStats() {
+        const token = localStorage.getItem('token');
+
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/dashboard/stats', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                window.location.href = '/login';
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error('Failed to load dashboard statistics');
+            }
+
+            const data = await response.json();
+
+            document.getElementById('skillsTeachCount').textContent =
+                data.stats.skillsTeach;
+
+            document.getElementById('skillsLearnCount').textContent =
+                data.stats.skillsLearn;
+
+            document.getElementById('pendingRequestsCount').textContent =
+                data.stats.pendingRequests;
+
+        } catch (error) {
+            console.error('Dashboard statistics error:', error);
+        }
+    }
+
+    async function loadDashboardSkills() {
+        const token = localStorage.getItem('token');
+        const skillsList = document.getElementById('dashboardSkillsList');
+
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/skills/my-skills', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                window.location.href = '/login';
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error('Could not load skills');
+            }
+
+            const data = await response.json();
+            const skills = data.skills || [];
+
+            if (skills.length === 0) {
+                skillsList.innerHTML = '<p>You have not added any skills yet.</p>';
+                return;
+            }
+
+            skillsList.innerHTML = '';
+
+            skills.forEach(skill => {
+                const isTeaching = skill.skill_type === 'teach';
+
+                const skillElement = document.createElement('div');
+                skillElement.className = 'dashboard-skill';
+
+                const symbol = document.createElement('div');
+                symbol.className = 'skill-symbol';
+                symbol.textContent = isTeaching ? '🎓' : '📚';
+
+                const details = document.createElement('div');
+                const name = document.createElement('h3');
+                name.textContent = skill.skill_name;
+
+                const label = document.createElement('span');
+                label.className = isTeaching ? 'teach-label' : 'learn-label';
+                label.textContent = isTeaching ? 'Teaching' : 'Learning';
+
+                details.appendChild(name);
+                details.appendChild(label);
+                skillElement.appendChild(symbol);
+                skillElement.appendChild(details);
+                skillsList.appendChild(skillElement);
+            });
+        } catch (error) {
+            console.error('Dashboard skills error:', error);
+            skillsList.innerHTML = '<p>Could not load your skills. Please try again.</p>';
+        }
+    }
+
+    async function loadRecentRequests() {
+    const token = localStorage.getItem('token');
+    const requestsList = document.getElementById('dashboardRequestsList');
+
+    try {
+        const response = await fetch('/api/dashboard/recent-requests', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Could not load recent requests');
+        }
+
+        const data = await response.json();
+        const requests = data.requests || [];
+
+        if (requests.length === 0) {
+            requestsList.innerHTML = '<p>You have no exchange requests yet.</p>';
+            return;
+        }
+
+        requestsList.innerHTML = '';
+
+        requests.forEach(request => {
+            const item = document.createElement('div');
+            item.className = 'request-item';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = request.name
+                .split(' ')
+                .map(part => part[0])
+                .join('')
+                .substring(0, 2)
+                .toUpperCase();
+
+            const info = document.createElement('div');
+            info.className = 'request-info';
+
+            const name = document.createElement('h3');
+            name.textContent = request.name;
+
+            const description = document.createElement('p');
+            description.textContent =
+                `${request.direction} request: ${request.offeredSkill} ↔ ${request.requestedSkill}`;
+
+            const direction = document.createElement('span');
+            direction.textContent = request.direction;
+
+            info.appendChild(name);
+            info.appendChild(description);
+            info.appendChild(direction);
+
+            const status = document.createElement('span');
+            const statusClass = request.status.toLowerCase();
+
+            status.className = `status ${statusClass}`;
+            status.textContent = request.status;
+
+            item.appendChild(avatar);
+            item.appendChild(info);
+            item.appendChild(status);
+
+            requestsList.appendChild(item);
+        });
+
+    } catch (error) {
+        console.error('Recent requests error:', error);
+        requestsList.innerHTML =
+            '<p>Could not load recent requests. Please try again.</p>';
+    }
+}
+
+    loadDashboardStats();
+    loadDashboardSkills();
+    loadRecentRequests();
+</script>
+
+</body>
+</html>

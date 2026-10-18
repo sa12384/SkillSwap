@@ -1,0 +1,837 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Dashboard | SkillSwap</title>
+    <link rel="stylesheet" href="/css/style.css">
+
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="brand">
+            Skill<span>Swap</span>
+            <span class="admin-label">ADMIN</span>
+        </div>
+
+        <nav>
+            <button type="button" id="logoutButton">Log out</button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="heading">
+            <div>
+                <h1>Admin Dashboard</h1>
+                <p class="muted">
+                    Monitor users, skills, exchange requests and platform activity.
+                </p>
+            </div>
+
+            <button class="button" type="button" id="refreshButton">
+                Refresh data
+            </button>
+        </section>
+
+        <div class="warning">
+            Only administrator accounts should access this dashboard.
+            Deleting a user may also remove related records where your
+            database uses ON DELETE CASCADE.
+        </div>
+
+        <p id="message" class="message" role="status"></p>
+
+        <section class="stats" aria-label="Platform statistics">
+            <div class="stat">
+                <div class="stat-label">All users</div>
+                <div class="stat-value" id="total_users">—</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">Students</div>
+                <div class="stat-value" id="total_students">—</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">Available skills</div>
+                <div class="stat-value" id="total_skills">—</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">Skill listings</div>
+                <div class="stat-value" id="user_skill_listings">—</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">All requests</div>
+                <div class="stat-value" id="total_requests">—</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">Pending requests</div>
+                <div class="stat-value" id="pending_requests">—</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">Accepted requests</div>
+                <div class="stat-value" id="accepted_requests">—</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">Rejected requests</div>
+                <div class="stat-value" id="rejected_requests">—</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">Completed requests</div>
+                <div class="stat-value" id="completed_requests">—</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">Learning sessions</div>
+                <div class="stat-value" id="total_sessions">—</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">Reviews</div>
+                <div class="stat-value" id="total_reviews">—</div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-heading">
+                <div>
+                    <h2>Registered users</h2>
+                    <div class="muted">
+                        Search by name or email. Showing up to 200 accounts.
+                    </div>
+                </div>
+
+                <input
+                    class="search"
+                    id="userSearch"
+                    type="search"
+                    placeholder="Search name or email..."
+                    aria-label="Search registered users"
+                >
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Skills</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="usersBody">
+                        <tr>
+                            <td colspan="6" class="empty">Loading users...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-heading">
+                <div>
+                    <h2>Exchange requests</h2>
+                    <div class="muted">
+                        View request participants and update request status.
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Requester</th>
+                            <th>Receiver</th>
+                            <th>Offered skill</th>
+                            <th>Requested skill</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="requestsBody">
+                        <tr>
+                            <td colspan="7" class="empty">
+                                Loading exchange requests...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+
+<!-- Skill Management -->
+<section class="panel">
+    <div class="panel-head">
+        <div>
+            <h2>Skill Management</h2>
+            <p class="sub">Add, edit, and remove skills available on SkillSwap.</p>
+        </div>
+    </div>
+
+    <form id="skillForm" class="row-actions" style="flex-wrap:wrap;margin-bottom:18px">
+        <input
+            id="skillName"
+            class="search"
+            type="text"
+            placeholder="Enter skill name"
+            maxlength="100"
+            required
+        >
+
+        <select id="skillCategory" class="status-select">
+            <option value="">No category</option>
+        </select>
+
+        <button class="btn" type="submit">Add Skill</button>
+    </form>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Skill Name</th>
+                    <th>Category</th>
+                    <th>Student Listings</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="skillsBody">
+                <tr>
+                    <td colspan="5" class="loading">Loading skills...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- Category Management -->
+<section class="panel">
+    <div class="panel-head">
+        <div>
+            <h2>Category Management</h2>
+            <p class="sub">Organize skills into categories.</p>
+        </div>
+    </div>
+
+    <form id="categoryForm" class="row-actions"
+          style="flex-wrap:wrap;margin-bottom:18px">
+        <input
+            id="categoryName"
+            class="search"
+            type="text"
+            placeholder="Enter category name"
+            maxlength="100"
+            required
+        >
+
+        <button class="btn" type="submit">Add Category</button>
+    </form>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Category Name</th>
+                    <th>Skills</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="categoriesBody">
+                <tr>
+                    <td colspan="4" class="loading">Loading categories...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+    </main>
+
+    <script>
+        (() => {
+            const token = localStorage.getItem('token');
+            const storedUser = localStorage.getItem('user');
+
+            const $ = id => document.getElementById(id);
+
+            let searchTimer;
+
+            function showMessage(text, type = '') {
+                $('message').textContent = text;
+                $('message').className = 'message ' + type;
+            }
+
+            // Shared message helper used by dashboard and management actions.
+            function message(text, isError = false) {
+                showMessage(text, isError ? 'error' : 'success');
+            }
+
+            function escapeHtml(value) {
+                return String(value ?? '').replace(/[&<>"']/g, character => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                })[character]);
+            }
+
+            async function api(url, options = {}) {
+                if (!token) {
+                    window.location.replace('/login');
+                    throw new Error('Please log in first.');
+                }
+
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token,
+                        ...(options.headers || {})
+                    }
+                });
+
+                const data = await response.json().catch(() => ({}));
+
+                if (response.status === 401) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.replace('/login');
+                    throw new Error('Your login expired. Please log in again.');
+                }
+
+                if (response.status === 403) {
+                    showMessage('Administrator access is required.', 'error');
+                    throw new Error(data.message || 'Access denied.');
+                }
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'The request failed.');
+                }
+
+                return data;
+            }
+
+            function statusClass(status) {
+                const value = String(status || '').toLowerCase();
+
+                return ['pending', 'accepted', 'rejected', 'completed']
+                    .includes(value) ? value : '';
+            }
+
+            async function loadStats() {
+                const data = await api('/api/admin/stats');
+
+                Object.entries(data.stats).forEach(([key, value]) => {
+                    const element = $(key);
+
+                    if (element) {
+                        element.textContent =
+                            Number(value).toLocaleString();
+                    }
+                });
+            }
+
+            async function loadUsers(search = '') {
+                const data = await api(
+                    '/api/admin/users?search=' + encodeURIComponent(search)
+                );
+
+                const users = data.users || [];
+
+                if (!users.length) {
+                    $('usersBody').innerHTML = `
+                        <tr>
+                            <td colspan="6" class="empty">
+                                No users found.
+                            </td>
+                        </tr>`;
+                    return;
+                }
+
+                $('usersBody').innerHTML = users.map(user => `
+                    <tr>
+                        <td>${escapeHtml(user.user_id)}</td>
+                        <td>${escapeHtml(user.name)}</td>
+                        <td>${escapeHtml(user.email)}</td>
+                        <td>
+                            <span class="pill">
+                                ${escapeHtml(user.role)}
+                            </span>
+                        </td>
+                        <td>${escapeHtml(user.skill_count)}</td>
+                        <td>
+                            ${
+                                user.role === 'admin'
+                                ? '<span class="muted">Protected admin</span>'
+                                : `<button class="button button-danger"
+                                    data-delete-user="${escapeHtml(user.user_id)}">
+                                    Delete
+                                  </button>`
+                            }
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            async function loadRequests() {
+                const data = await api('/api/admin/requests');
+                const requests = data.requests || [];
+
+                if (!requests.length) {
+                    $('requestsBody').innerHTML = `
+                        <tr>
+                            <td colspan="7" class="empty">
+                                No exchange requests yet.
+                            </td>
+                        </tr>`;
+                    return;
+                }
+
+                const allowedStatuses = [
+                    'Pending', 'Accepted', 'Rejected', 'Completed'
+                ];
+
+                $('requestsBody').innerHTML = requests.map(request => {
+                    const currentStatus = String(request.status || 'Pending');
+
+                    const options = allowedStatuses.map(status => `
+                        <option value="${status}"
+                            ${currentStatus.toLowerCase() === status.toLowerCase()
+                                ? 'selected' : ''}>
+                            ${status}
+                        </option>
+                    `).join('');
+
+                    return `
+                        <tr>
+                            <td>${escapeHtml(request.request_id)}</td>
+                            <td>${escapeHtml(request.requester_name || 'Unknown')}</td>
+                            <td>${escapeHtml(request.receiver_name || 'Unknown')}</td>
+                            <td>${escapeHtml(request.offered_skill_name || '—')}</td>
+                            <td>${escapeHtml(request.requested_skill_name || '—')}</td>
+                            <td>
+                                <span class="pill ${statusClass(currentStatus)}">
+                                    ${escapeHtml(currentStatus)}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="actions">
+                                    <select class="status-select"
+                                        data-status-select="${escapeHtml(request.request_id)}"
+                                        aria-label="Select request status">
+                                        ${options}
+                                    </select>
+
+                                    <button class="button button-light"
+                                        data-save-request="${escapeHtml(request.request_id)}">
+                                        Save
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            
+async function refreshAll() {
+  showMessage('Refreshing dashboard…');
+
+  try {
+    await Promise.all([
+      loadStats(),
+      loadUsers($('userSearch').value.trim()),
+      loadRequests(),
+      loadCategories(),
+      loadSkills()
+    ]);
+
+    showMessage('Dashboard data updated.', 'success');
+  } catch (error) {
+    if (
+      error.message !== 'Forbidden' &&
+      error.message !== 'Please log in first.'
+    ) {
+      message(error.message, true);
+    }
+  }
+}
+
+
+            $('refreshButton').addEventListener('click', refreshAll);
+
+            $('userSearch').addEventListener('input', () => {
+                clearTimeout(searchTimer);
+
+                searchTimer = setTimeout(() => {
+                    loadUsers($('userSearch').value.trim())
+                        .catch(error => showMessage(error.message, 'error'));
+                }, 300);
+            });
+
+            $('usersBody').addEventListener('click', async event => {
+                const button = event.target.closest('[data-delete-user]');
+
+                if (!button) return;
+
+                const id = button.dataset.deleteUser;
+
+                if (!confirm(
+                    `Delete user #${id}? This action may remove related records.`
+                )) {
+                    return;
+                }
+
+                button.disabled = true;
+
+                try {
+                    const result = await api(
+                        '/api/admin/users/' + encodeURIComponent(id),
+                        { method: 'DELETE' }
+                    );
+
+                    showMessage(result.message, 'success');
+                    await refreshAll();
+                } catch (error) {
+                    showMessage(error.message, 'error');
+                    button.disabled = false;
+                }
+            });
+
+            $('requestsBody').addEventListener('click', async event => {
+                const button = event.target.closest('[data-save-request]');
+
+                if (!button) return;
+
+                const id = button.dataset.saveRequest;
+                const select = document.querySelector(
+                    `[data-status-select="${id}"]`
+                );
+
+                if (!select) return;
+
+                button.disabled = true;
+
+                try {
+                    const result = await api(
+                        '/api/admin/requests/' +
+                        encodeURIComponent(id) + '/status',
+                        {
+                            method: 'PATCH',
+                            body: JSON.stringify({
+                                status: select.value
+                            })
+                        }
+                    );
+
+                    showMessage(result.message, 'success');
+                    await refreshAll();
+                } catch (error) {
+                    showMessage(error.message, 'error');
+                } finally {
+                    button.disabled = false;
+                }
+            });
+
+
+
+
+            
+  // ------------------------------------
+  // SKILL MANAGEMENT
+  // ------------------------------------
+
+  async function loadSkills() {
+    const { skills } = await api('/api/admin/skills');
+
+    $('skillsBody').innerHTML = skills.length
+      ? skills.map(skill => `
+          <tr>
+            <td>${escapeHtml(skill.skill_id)}</td>
+            <td>${escapeHtml(skill.skill_name)}</td>
+            <td>${escapeHtml(skill.category_name || 'Uncategorized')}</td>
+            <td>${escapeHtml(skill.listing_count)}</td>
+            <td>
+              <div class="row-actions">
+                <button class="btn light"
+                  data-edit-skill="${escapeHtml(skill.skill_id)}">
+                  Edit
+                </button>
+                <button class="btn danger"
+                  data-delete-skill="${escapeHtml(skill.skill_id)}">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="5" class="loading">No skills found.</td></tr>';
+  }
+
+  // ------------------------------------
+  // CATEGORY MANAGEMENT
+  // ------------------------------------
+
+  async function loadCategories() {
+    const { categories } = await api('/api/admin/categories');
+
+    $('categoriesBody').innerHTML = categories.length
+      ? categories.map(category => `
+          <tr>
+            <td>${escapeHtml(category.category_id)}</td>
+            <td>${escapeHtml(category.name)}</td>
+            <td>${escapeHtml(category.skill_count)}</td>
+            <td>
+              <div class="row-actions">
+                <button class="btn light"
+                  data-edit-category="${escapeHtml(category.category_id)}">
+                  Edit
+                </button>
+                <button class="btn danger"
+                  data-delete-category="${escapeHtml(category.category_id)}">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="4" class="loading">No categories found.</td></tr>';
+
+    // Update the category dropdown in the Add Skill form.
+    const select = $('skillCategory');
+    const currentValue = select.value;
+
+    select.innerHTML =
+      '<option value="">No category</option>' +
+      categories.map(category => `
+        <option value="${escapeHtml(category.category_id)}">
+          ${escapeHtml(category.name)}
+        </option>
+      `).join('');
+
+    if ([...select.options].some(option => option.value === currentValue)) {
+      select.value = currentValue;
+    }
+  }
+
+  // Add a skill.
+  $('skillForm').addEventListener('submit', async event => {
+    event.preventDefault();
+
+    const skill_name = $('skillName').value.trim();
+    const category_id = $('skillCategory').value;
+
+    try {
+      const result = await api('/api/admin/skills', {
+        method: 'POST',
+        body: JSON.stringify({ skill_name, category_id })
+      });
+
+      message(result.message);
+      $('skillForm').reset();
+
+      await Promise.all([
+        loadSkills(),
+        loadStats()
+      ]);
+    } catch (error) {
+      message(error.message, true);
+    }
+  });
+
+  // Edit or delete a skill.
+  $('skillsBody').addEventListener('click', async event => {
+    const editButton = event.target.closest('[data-edit-skill]');
+    const deleteButton = event.target.closest('[data-delete-skill]');
+
+    if (editButton) {
+      const id = editButton.dataset.editSkill;
+
+      const { skills } = await api('/api/admin/skills');
+      const skill = skills.find(item => String(item.skill_id) === id);
+
+      if (!skill) return message('Skill not found.', true);
+
+      const skill_name = prompt('Edit skill name:', skill.skill_name);
+      if (skill_name === null) return;
+
+      const cleanedName = skill_name.trim();
+      if (!cleanedName) {
+        return message('Skill name cannot be empty.', true);
+      }
+
+      try {
+        const result = await api('/api/admin/skills/' + id, {
+          method: 'PUT',
+          body: JSON.stringify({
+            skill_name: cleanedName,
+            category_id: skill.category_id ?? ''
+          })
+        });
+
+        message(result.message);
+        await Promise.all([loadSkills(), loadStats()]);
+      } catch (error) {
+        message(error.message, true);
+      }
+    }
+
+    if (deleteButton) {
+      const id = deleteButton.dataset.deleteSkill;
+
+      if (!confirm(
+        'Delete this skill? Skills used in listings or exchange requests cannot be deleted.'
+      )) return;
+
+      try {
+        const result = await api('/api/admin/skills/' + id, {
+          method: 'DELETE'
+        });
+
+        message(result.message);
+        await Promise.all([loadSkills(), loadStats()]);
+      } catch (error) {
+        message(error.message, true);
+      }
+    }
+  });
+
+  // Add a category.
+  $('categoryForm').addEventListener('submit', async event => {
+    event.preventDefault();
+
+    const name = $('categoryName').value.trim();
+
+    try {
+      const result = await api('/api/admin/categories', {
+        method: 'POST',
+        body: JSON.stringify({ name })
+      });
+
+      message(result.message);
+      $('categoryForm').reset();
+
+      await Promise.all([
+        loadCategories(),
+        loadSkills(),
+        loadStats()
+      ]);
+    } catch (error) {
+      message(error.message, true);
+    }
+  });
+
+  // Edit or delete a category.
+  $('categoriesBody').addEventListener('click', async event => {
+    const editButton = event.target.closest('[data-edit-category]');
+    const deleteButton = event.target.closest('[data-delete-category]');
+
+    if (editButton) {
+      const id = editButton.dataset.editCategory;
+
+      const { categories } = await api('/api/admin/categories');
+      const category = categories.find(
+        item => String(item.category_id) === id
+      );
+
+      if (!category) return message('Category not found.', true);
+
+      const name = prompt('Edit category name:', category.name);
+      if (name === null) return;
+
+      if (!name.trim()) {
+        return message('Category name cannot be empty.', true);
+      }
+
+      try {
+        const result = await api('/api/admin/categories/' + id, {
+          method: 'PUT',
+          body: JSON.stringify({ name: name.trim() })
+        });
+
+        message(result.message);
+        await Promise.all([loadCategories(), loadSkills()]);
+      } catch (error) {
+        message(error.message, true);
+      }
+    }
+
+    if (deleteButton) {
+      const id = deleteButton.dataset.deleteCategory;
+
+      if (!confirm(
+        'Delete this category? It must not contain any skills.'
+      )) return;
+
+      try {
+        const result = await api('/api/admin/categories/' + id, {
+          method: 'DELETE'
+        });
+
+        message(result.message);
+        await Promise.all([loadCategories(), loadSkills(), loadStats()]);
+      } catch (error) {
+        message(error.message, true);
+      }
+    }
+  });
+
+
+
+
+            $('logoutButton').addEventListener('click', () => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.replace('/login');
+            });
+
+            let user = null;
+
+            try {
+                user = storedUser ? JSON.parse(storedUser) : null;
+            } catch {
+                user = null;
+            }
+
+            if (!token) {
+                window.location.replace('/login');
+                return;
+            }
+
+            if (!user || user.role !== 'admin') {
+                showMessage(
+                    'Admin account required. Redirecting...',
+                    'error'
+                );
+
+                setTimeout(() => {
+                    window.location.replace('/dashboard');
+                }, 800);
+
+                return;
+            }
+
+            refreshAll();
+        })();
+    </script>
+</body>
+</html>

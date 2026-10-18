@@ -1,0 +1,188 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exchange Requests | SkillSwap</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">SkillSwap</div>
+        
+<div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/skills">Explore Skills</a>
+    <a href="/find-students" class="active">Find Students</a>
+    <a href="/requests">Requests</a>
+    <a href="/profile">Profile</a>
+</div>
+
+    </nav>
+
+    <main class="skills-page">
+        <h1>Exchange Requests</h1>
+        <p>Manage your skill exchange requests.</p>
+
+        <section>
+            <h2>Received Requests</h2>
+            <div id="receivedRequests">Loading requests...</div>
+        </section>
+
+        <section style="margin-top: 30px;">
+            <h2>Sent Requests</h2>
+            <div id="sentRequests">Loading requests...</div>
+        </section>
+    </main>
+
+
+<script>
+    const token = localStorage.getItem('token');
+
+    async function loadRequests() {
+        const receivedDiv = document.getElementById('receivedRequests');
+        const sentDiv = document.getElementById('sentRequests');
+
+        if (!token) {
+            receivedDiv.textContent = 'Please log in to view your requests.';
+            sentDiv.textContent = 'Please log in to view your requests.';
+            return;
+        }
+
+        try {
+            const [receivedResponse, sentResponse] = await Promise.all([
+                fetch('/api/exchange-requests/received', {
+                    headers: { Authorization: 'Bearer ' + token }
+                }),
+                fetch('/api/exchange-requests/sent', {
+                    headers: { Authorization: 'Bearer ' + token }
+                })
+            ]);
+
+            const receivedData = await receivedResponse.json();
+            const sentData = await sentResponse.json();
+
+            if (!receivedResponse.ok || !sentResponse.ok) {
+                receivedDiv.textContent = 'Could not load requests. Please log in again.';
+                sentDiv.textContent = 'Could not load requests. Please log in again.';
+                return;
+            }
+
+            receivedDiv.innerHTML = '';
+            sentDiv.innerHTML = '';
+
+            if (receivedData.requests.length === 0) {
+                receivedDiv.textContent = 'No requests received yet.';
+            } else {
+                receivedData.requests.forEach(request => {
+                    const card = document.createElement('div');
+                    card.className = 'skill-card';
+
+                    const title = document.createElement('h3');
+                    title.textContent = 'Request #' + request.request_id;
+
+                    
+const details = document.createElement('p');
+details.textContent =
+    'From: ' + request.requester_name +
+    ' | Offering: ' + request.offered_skill_name +
+    ' | Wants to learn: ' + request.requested_skill_name;
+
+const status = document.createElement('p');
+status.textContent = 'Status: ' + request.status;
+
+
+                    card.append(title, details, status);
+
+                    if (request.status === 'Pending') {
+                        const acceptButton = document.createElement('button');
+                        acceptButton.textContent = 'Accept';
+                        acceptButton.addEventListener('click', () => {
+                            updateRequest(request.request_id, 'Accepted');
+                        });
+
+                        const rejectButton = document.createElement('button');
+                        rejectButton.textContent = 'Reject';
+                        rejectButton.style.marginLeft = '10px';
+                        rejectButton.addEventListener('click', () => {
+                            updateRequest(request.request_id, 'Rejected');
+                        });
+
+                        card.append(acceptButton, rejectButton);
+                    }
+
+                    receivedDiv.appendChild(card);
+                });
+            }
+
+            if (sentData.requests.length === 0) {
+                sentDiv.textContent = 'No requests sent yet.';
+            } else {
+                sentData.requests.forEach(request => {
+                    const card = document.createElement('div');
+                    card.className = 'skill-card';
+
+                    const title = document.createElement('h3');
+                    title.textContent = 'Request #' + request.request_id;
+
+                    const details = document.createElement('p');
+                    
+details.textContent =
+    'To: ' + request.receiver_name +
+    ' | Offering: ' + request.offered_skill_name +
+    ' | Wants to learn: ' + request.requested_skill_name;
+
+
+                    const status = document.createElement('p');
+                    status.textContent = 'Status: ' + request.status;
+
+                    card.append(title, details, status);
+                    sentDiv.appendChild(card);
+                });
+            }
+
+        } catch (error) {
+            console.error('Error loading requests:', error);
+            receivedDiv.textContent = 'Could not connect to the server.';
+            sentDiv.textContent = 'Could not connect to the server.';
+        }
+    }
+
+    async function updateRequest(requestId, status) {
+        try {
+            const response = await fetch(
+                '/api/exchange-requests/' + requestId + '/status',
+                {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ status })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                alert(data.message || 'Could not update request.');
+                return;
+            }
+
+            alert(data.message);
+            loadRequests();
+
+        } catch (error) {
+            console.error('Error updating request:', error);
+            alert('Could not connect to the server.');
+        }
+    }
+
+    loadRequests();
+</script>
+
+
+</body>
+</html>
