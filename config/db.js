@@ -1,12 +1,26 @@
-const pgp = require('pg-promise')();
+
 require('dotenv').config();
 
-const connectionString = process.env.DATABASE_URL || 
-  `postgresql://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}:${process.env.DB_PORT || 5432}/${process.env.DB_NAME}`;
+const pgp = require('pg-promise')();
 
-const db = pgp({
-  connectionString: connectionString,
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
-});
+let db;
+
+if (process.env.DATABASE_URL) {
+    db = pgp({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+    });
+} else {
+    db = pgp({
+        host: process.env.DB_HOST || 'localhost',
+        port: Number(process.env.DB_PORT || 5432),
+        database: process.env.DB_NAME || 'SkillSwap',
+        user: process.env.DB_USER || 'postgres',
+        password: process.env.DB_PASSWORD || process.env.DB_PASS,
+        ssl: process.env.DB_SSL === 'true'
+            ? { rejectUnauthorized: false }
+            : false
+    });
+}
 
 module.exports = db;
