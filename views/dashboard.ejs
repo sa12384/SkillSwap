@@ -43,7 +43,7 @@
             <div>
                 <p class="small-title">STUDENT DASHBOARD</p>
 
-                <h1>Welcome back, Sangay! 👋</h1>
+                <h1>Welcome back, <span data-user-name>...</span>! 👋</h1>
 
                 <p>
                     Keep learning, sharing and connecting with your peers.
@@ -560,9 +560,15 @@
     }
 }
 
+
+ const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const nameSlot = document.querySelector('[data-user-name]');
+    if (nameSlot) nameSlot.textContent = savedUser.name || 'Student';
+
     loadDashboardStats();
     loadDashboardSkills();
     loadRecentRequests();
+
 </script>
 
 </body>
