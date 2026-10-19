@@ -10,8 +10,15 @@ app.use(express.urlencoded({ extended: true }));
 // EJS
 app.set('view engine', 'ejs');
 
+app.set('views', require('path').join(__dirname, 'views'));
+
 // Static files
 app.use(express.static('public'));
+
+app.use((req, res, next) => {
+    if (!req.path.startsWith('/api')) res.set('Cache-Control', 'no-store');
+    next();
+});
 
 // Page routes
 const pageRoutes = require('./routes/pages');

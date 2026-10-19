@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - SkillSwap</title>
     <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/auth.js"></script>
 </head>
 <body class="auth-page">
     <nav class="navbar">
@@ -59,7 +60,7 @@
             
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
-            const rememberMe = document.getElementById('rememberMe').checked;
+     
             const loginButton = loginForm.querySelector('button[type="submit"]');
             
             loginButton.disabled = true;
@@ -75,7 +76,15 @@
                     body: JSON.stringify({ email, password })
                 });
                 
-                const data = await response.json();
+                // The server may return HTML (e.g. while Render is waking up)
+                let data = {};
+                try {
+                    data = await response.json();
+                } catch (parseError) {
+                    loginMessage.textContent = 'The server is not ready yet. Please wait a moment and try again.';
+                    loginMessage.style.color = 'red';
+                    return;
+                }
                 
                 if (!response.ok) {
                     loginMessage.textContent = data.message || 'Login failed. Please try again.';
@@ -83,14 +92,17 @@
                     return;
                 }
                 
-                if (!data.token) {
-                    loginMessage.textContent = 'Login response did not contain a token. Please try again.';
+                if (!data.token || !data.user) {
+                    loginMessage.textContent = 'Login response was incomplete. Please try again.';
                     loginMessage.style.color = 'red';
-                    console.error('Login response is missing its token.');
+                    console.error('Login response is missing its token or user.');
                     return;
                 }
                 
-                // Save the token and user details in this browser.
+                // Clear anything left over from a previous account,
+                // then save the new token and user details.
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
                 
@@ -105,8 +117,8 @@
                 loginMessage.style.color = 'green';
                 
                 // Redirect user based on their account access level
-                window.location.assign(
-                    data.user.role === 'admin' ? '/admin-dashboard' : '/profile'
+                window.location.replace(
+                    data.user.role === 'admin' ? '/admin-dashboard' : '/dashboard'
                 );
                 
             } catch (error) {

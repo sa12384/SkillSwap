@@ -1,9 +1,7 @@
-
 const express = require('express');
 const router = express.Router();
 
 const pool = require('../config/db');
-const ExchangeRequest = require('../models/ExchangeRequest');
 const authMiddleware = require('../middleware/authMiddleware');
 
 // GET /api/dashboard/stats
@@ -97,22 +95,6 @@ router.get('/recent-requests', authMiddleware, async (req, res) => {
     } catch (error) {
         console.error('Recent requests error:', error);
 
-        res.status(500).json({
-            message: 'Could not load recent requests.'
-        });
-    }
-});
-
-// GET /api/dashboard/recent-requests
-router.get('/recent-requests', authMiddleware, async (req, res) => {
-    try {
-        const userId = req.user.user_id;
-        const requests =
-            await ExchangeRequest.getRecentRequests(userId);
-
-        res.json({ requests });
-    } catch (error) {
-        console.error('Recent requests error:', error);
         res.status(500).json({
             message: 'Could not load recent requests.'
         });
