@@ -51,7 +51,6 @@
                     >
                 </div>
 
-                <!-- Phone Number Field -->
                 <div class="form-group">
                     <label for="phone">Phone Number</label>
                     <input
@@ -85,10 +84,20 @@
                     ></textarea>
                 </div>
 
+                <!-- Terms and Conditions Agreement -->
                 <div class="terms">
-                    <label>
-                        <input type="checkbox" required>
-                        I agree to the SkillSwap terms and conditions.
+                    <label for="termsAccepted">
+                        <input
+                            type="checkbox"
+                            id="termsAccepted"
+                            name="termsAccepted"
+                            required
+                        >
+                        I have read and agree to the
+                        <a href="/terms" target="_blank">
+                            Terms and Conditions
+                        </a>
+                        of SkillSwap.
                     </label>
                 </div>
 
@@ -132,6 +141,15 @@
             const phone = document.getElementById('phone').value.trim();
             const password = document.getElementById('password').value;
             const bio = document.getElementById('bio').value.trim();
+            const termsAccepted =
+                document.getElementById('termsAccepted').checked;
+
+            if (!termsAccepted) {
+                registerMessage.textContent =
+                    'Please agree to the Terms and Conditions.';
+                registerMessage.style.color = 'red';
+                return;
+            }
 
             registerMessage.textContent = 'Creating your account...';
             registerMessage.style.color = 'blue';
@@ -148,7 +166,8 @@
                         email,
                         phone,
                         password,
-                        bio
+                        bio,
+                        termsAccepted
                     })
                 });
 

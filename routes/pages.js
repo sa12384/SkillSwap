@@ -63,4 +63,8 @@ router.get('/sessions', (req, res) => {
 });
 
 
+router.get('/terms', (req, res) => {
+    res.render('terms');
+});
+
 module.exports = router;
