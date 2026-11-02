@@ -237,6 +237,7 @@ router.patch('/requests/:id/status', async (req, res) => {
 // 4. SKILL MANAGEMENT
 // GET /api/admin/skills
 // ------------------------------------
+
 router.get('/skills', async (req, res) => {
     try {
         const result = await pool.query(`
@@ -244,14 +245,14 @@ router.get('/skills', async (req, res) => {
                 s.skill_id,
                 s.skill_name,
                 s.category_id,
-                c.name AS category_name,
+                c.category_name AS category_name,
                 COUNT(DISTINCT us.user_skill_id)::int AS listing_count
             FROM skills s
             LEFT JOIN categories c
                 ON c.category_id = s.category_id
             LEFT JOIN user_skills us
                 ON us.skill_id = s.skill_id
-            GROUP BY s.skill_id, c.name
+            GROUP BY s.skill_id, c.category_id, c.category_name
             ORDER BY s.skill_name ASC
         `);
 
@@ -263,6 +264,7 @@ router.get('/skills', async (req, res) => {
         });
     }
 });
+
 
 // POST /api/admin/skills
 router.post('/skills', async (req, res) => {
@@ -449,17 +451,19 @@ router.delete('/skills/:id', async (req, res) => {
 // 5. CATEGORY MANAGEMENT
 // GET /api/admin/categories
 // ------------------------------------
+
 router.get('/categories', async (req, res) => {
     try {
         const result = await pool.query(`
             SELECT
                 c.category_id,
-                c.name,
+                c.category_name AS name,
                 COUNT(DISTINCT s.skill_id)::int AS skill_count
             FROM categories c
-            LEFT JOIN skills s ON s.category_id = c.category_id
-            GROUP BY c.category_id
-            ORDER BY c.name ASC
+            LEFT JOIN skills s
+                ON s.category_id = c.category_id
+            GROUP BY c.category_id, c.category_name
+            ORDER BY c.category_name ASC
         `);
 
         res.json({ categories: result.rows });
@@ -471,7 +475,9 @@ router.get('/categories', async (req, res) => {
     }
 });
 
+
 // POST /api/admin/categories
+
 router.post('/categories', async (req, res) => {
     const name = String(req.body.name || '').trim();
 
@@ -483,9 +489,9 @@ router.post('/categories', async (req, res) => {
 
     try {
         const result = await pool.query(
-            `INSERT INTO categories (name)
+            `INSERT INTO categories (category_name)
              VALUES ($1)
-             RETURNING category_id, name`,
+             RETURNING category_id, category_name AS name`,
             [name]
         );
 
@@ -508,7 +514,9 @@ router.post('/categories', async (req, res) => {
     }
 });
 
+
 // PUT /api/admin/categories/:id
+
 router.put('/categories/:id', async (req, res) => {
     const categoryId = Number.parseInt(req.params.id, 10);
     const name = String(req.body.name || '').trim();
@@ -528,9 +536,9 @@ router.put('/categories/:id', async (req, res) => {
     try {
         const result = await pool.query(
             `UPDATE categories
-             SET name = $1
+             SET category_name = $1
              WHERE category_id = $2
-             RETURNING category_id, name`,
+             RETURNING category_id, category_name AS name`,
             [name, categoryId]
         );
 
@@ -558,6 +566,7 @@ router.put('/categories/:id', async (req, res) => {
         });
     }
 });
+
 
 // DELETE /api/admin/categories/:id
 router.delete('/categories/:id', async (req, res) => {
