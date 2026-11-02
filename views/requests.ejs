@@ -10,16 +10,16 @@
 <body>
     <nav class="navbar">
         <div class="logo">SkillSwap</div>
-        
-<div class="nav-links">
-    <a href="/">Home</a>
-    <a href="/dashboard">Dashboard</a>
-    <a href="/skills">Explore Skills</a>
-    <a href="/find-students" class="active">Find Students</a>
-    <a href="/requests">Requests</a>
-    <a href="/profile">Profile</a>
-</div>
 
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/skills">Explore Skills</a>
+            <a href="/find-students">Find Students</a>
+            <a href="/requests" class="active">Requests</a>
+            <a href="/sessions">My Sessions</a>
+            <a href="/profile">Profile</a>
+        </div>
     </nav>
 
     <main class="skills-page">
@@ -36,7 +36,6 @@
             <div id="sentRequests">Loading requests...</div>
         </section>
     </main>
-
 
 <script>
     const token = localStorage.getItem('token');
@@ -73,6 +72,7 @@
             receivedDiv.innerHTML = '';
             sentDiv.innerHTML = '';
 
+            // Display received requests
             if (receivedData.requests.length === 0) {
                 receivedDiv.textContent = 'No requests received yet.';
             } else {
@@ -83,22 +83,21 @@
                     const title = document.createElement('h3');
                     title.textContent = 'Request #' + request.request_id;
 
-                    
-const details = document.createElement('p');
-details.textContent =
-    'From: ' + request.requester_name +
-    ' | Offering: ' + request.offered_skill_name +
-    ' | Wants to learn: ' + request.requested_skill_name;
+                    const details = document.createElement('p');
+                    details.textContent =
+                        'From: ' + request.requester_name +
+                        ' | Offering: ' + request.offered_skill_name +
+                        ' | Wants to learn: ' + request.requested_skill_name;
 
-const status = document.createElement('p');
-status.textContent = 'Status: ' + request.status;
-
+                    const status = document.createElement('p');
+                    status.textContent = 'Status: ' + request.status;
 
                     card.append(title, details, status);
 
                     if (request.status === 'Pending') {
                         const acceptButton = document.createElement('button');
                         acceptButton.textContent = 'Accept';
+
                         acceptButton.addEventListener('click', () => {
                             updateRequest(request.request_id, 'Accepted');
                         });
@@ -106,6 +105,7 @@ status.textContent = 'Status: ' + request.status;
                         const rejectButton = document.createElement('button');
                         rejectButton.textContent = 'Reject';
                         rejectButton.style.marginLeft = '10px';
+
                         rejectButton.addEventListener('click', () => {
                             updateRequest(request.request_id, 'Rejected');
                         });
@@ -113,10 +113,16 @@ status.textContent = 'Status: ' + request.status;
                         card.append(acceptButton, rejectButton);
                     }
 
+                    // Show contact details only for accepted requests
+                    if (request.status === 'Accepted') {
+                        addContactButton(card, request.request_id);
+                    }
+
                     receivedDiv.appendChild(card);
                 });
             }
 
+            // Display sent requests
             if (sentData.requests.length === 0) {
                 sentDiv.textContent = 'No requests sent yet.';
             } else {
@@ -128,17 +134,21 @@ status.textContent = 'Status: ' + request.status;
                     title.textContent = 'Request #' + request.request_id;
 
                     const details = document.createElement('p');
-                    
-details.textContent =
-    'To: ' + request.receiver_name +
-    ' | Offering: ' + request.offered_skill_name +
-    ' | Wants to learn: ' + request.requested_skill_name;
-
+                    details.textContent =
+                        'To: ' + request.receiver_name +
+                        ' | Offering: ' + request.offered_skill_name +
+                        ' | Wants to learn: ' + request.requested_skill_name;
 
                     const status = document.createElement('p');
                     status.textContent = 'Status: ' + request.status;
 
                     card.append(title, details, status);
+
+                    // Show contact details only for accepted requests
+                    if (request.status === 'Accepted') {
+                        addContactButton(card, request.request_id);
+                    }
+
                     sentDiv.appendChild(card);
                 });
             }
@@ -150,6 +160,93 @@ details.textContent =
         }
     }
 
+    // Add a button to view the other student's contact details
+    function addContactButton(card, requestId) {
+        const contactButton = document.createElement('button');
+        contactButton.textContent = 'View Contact Details';
+        contactButton.style.marginTop = '10px';
+
+        const contactDiv = document.createElement('div');
+        contactDiv.style.marginTop = '15px';
+        contactDiv.style.padding = '12px';
+        contactDiv.style.border = '1px solid #ddd';
+        contactDiv.style.borderRadius = '8px';
+        contactDiv.hidden = true;
+
+        let contactLoaded = false;
+
+        contactButton.addEventListener('click', async () => {
+
+            // Hide details if already visible
+            if (!contactDiv.hidden) {
+                contactDiv.hidden = true;
+                contactButton.textContent = 'View Contact Details';
+                return;
+            }
+
+            // Display previously loaded details
+            if (contactLoaded) {
+                contactDiv.hidden = false;
+                contactButton.textContent = 'Hide Contact Details';
+                return;
+            }
+
+            contactButton.disabled = true;
+            contactButton.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(
+                    '/api/exchange-requests/accepted/' +
+                    requestId + '/contacts',
+                    {
+                        headers: {
+                            Authorization: 'Bearer ' + token
+                        }
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert(data.message || 'Could not load contact details.');
+                    contactButton.textContent = 'View Contact Details';
+                    return;
+                }
+
+                const contact = data.contact;
+
+                const heading = document.createElement('h4');
+                heading.textContent = 'Student Contact Information';
+
+                const name = document.createElement('p');
+                name.textContent = 'Name: ' + (contact.name || 'Not provided');
+
+                const email = document.createElement('p');
+                email.textContent = 'Email: ' + (contact.email || 'Not provided');
+
+                const phone = document.createElement('p');
+                phone.textContent = 'Phone: ' + (contact.phone_number || 'Not provided');
+
+                contactDiv.append(heading, name, email, phone);
+
+                contactLoaded = true;
+                contactDiv.hidden = false;
+                contactButton.textContent = 'Hide Contact Details';
+
+            } catch (error) {
+                console.error('Contact details error:', error);
+                alert('Could not connect to the server.');
+                contactButton.textContent = 'View Contact Details';
+
+            } finally {
+                contactButton.disabled = false;
+            }
+        });
+
+        card.append(contactButton, contactDiv);
+    }
+
+    // Accept or reject an exchange request
     async function updateRequest(requestId, status) {
         try {
             const response = await fetch(
@@ -182,7 +279,6 @@ details.textContent =
 
     loadRequests();
 </script>
-
 
 </body>
 </html>

@@ -1,0 +1,267 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Sessions | SkillSwap</title>
+    <link rel="stylesheet" href="/css/style.css">
+
+    <style>
+        .sessions-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .session-card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .session-card h3 {
+            margin-top: 0;
+        }
+
+        .session-details {
+            line-height: 1.8;
+        }
+
+        .session-actions button {
+            padding: 9px 16px;
+            margin-right: 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .confirm-btn {
+            background: #198754;
+            color: white;
+        }
+
+        .decline-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    
+<nav class="sessions-navbar">
+
+    <a href="/" class="logo">
+        Skill<span>Swap</span>
+    </a>
+
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/skills">Explore Skills</a>
+        <a href="/find-students">Find Students</a>
+    <a href="/requests">Requests</a>
+        <a href="/sessions" class="active">My Sessions</a>
+        <a href="/profile">Profile</a>
+        
+    </div>
+
+</nav>
+
+
+    <div class="sessions-container">
+        <h1>My Sessions</h1>
+        <p>View and manage your skill exchange sessions.</p>
+
+        <div id="sessionsList">
+            Loading sessions...
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        const sessionsList = document.getElementById('sessionsList');
+
+        function escapeHTML(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            })[char]);
+        }
+
+        function getUserId() {
+            try {
+                const payload = JSON.parse(
+                    atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
+                );
+                return Number(payload.user_id);
+            } catch (error) {
+                return null;
+            }
+        }
+
+        async function loadSessions() {
+            if (!token) {
+                sessionsList.innerHTML =
+                    '<p>Please log in to view your sessions.</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/sessions', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    sessionsList.textContent =
+                        data.message || 'Could not load sessions.';
+                    return;
+                }
+
+                const sessions = data.sessions || [];
+                const currentUserId = getUserId();
+
+                if (sessions.length === 0) {
+                    sessionsList.innerHTML =
+                        '<div class="empty-message">' +
+                        '<h3>No sessions yet</h3>' +
+                        '<p>Your scheduled sessions will appear here.</p>' +
+                        '</div>';
+                    return;
+                }
+
+                sessionsList.innerHTML = sessions.map(session => {
+                    const isProposer =
+                        Number(session.proposed_by) === currentUserId;
+
+                    const showActions =
+                        session.status === 'Proposed' &&
+                        !isProposer;
+
+                    const date = new Date(
+                        session.session_date
+                    ).toLocaleDateString();
+
+                    return `
+                        <div class="session-card">
+                            <h3>${escapeHTML(session.title)}</h3>
+
+                            <div class="session-details">
+                                <p><strong>Teacher:</strong>
+                                    ${escapeHTML(session.teacher_name)}</p>
+
+                                <p><strong>Learner:</strong>
+                                    ${escapeHTML(session.learner_name)}</p>
+
+                                <p><strong>Description:</strong>
+                                    ${escapeHTML(session.description || 'No description')}</p>
+
+                                <p><strong>Date:</strong>
+                                    ${escapeHTML(date)}</p>
+
+                                <p><strong>Time:</strong>
+                                    ${escapeHTML(session.start_time)}
+                                    - ${escapeHTML(session.end_time)}</p>
+
+                                <p><strong>Meeting Location:</strong>
+                                    ${escapeHTML(session.meeting_location || 'Not provided')}</p>
+
+                                <p><strong>Meeting Link:</strong>
+                                    ${
+                                        session.meeting_link
+                                        ? `<a href="${escapeHTML(session.meeting_link)}"
+                                             target="_blank"
+                                             rel="noopener noreferrer">Join Meeting</a>`
+                                        : 'Not provided'
+                                    }
+                                </p>
+
+                                <p><strong>Status:</strong>
+                                    <span class="status">
+                                        ${escapeHTML(session.status)}
+                                    </span>
+                                </p>
+                            </div>
+
+                            ${
+                                showActions
+                                ? `
+                                    <div class="session-actions">
+                                        <button class="confirm-btn"
+                                            onclick="updateSession(${Number(session.session_id)}, 'Confirmed')">
+                                            Confirm
+                                        </button>
+
+                                        <button class="decline-btn"
+                                            onclick="updateSession(${Number(session.session_id)}, 'Declined')">
+                                            Decline
+                                        </button>
+                                    </div>
+                                `
+                                : ''
+                            }
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error(error);
+                sessionsList.textContent =
+                    'Something went wrong while loading sessions.';
+            }
+        }
+
+        async function updateSession(sessionId, status) {
+            try {
+                const response = await fetch(
+                    `/api/sessions/${sessionId}/status`,
+                    {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ status })
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert(data.message || 'Could not update session.');
+                    return;
+                }
+
+                alert(data.message || 'Session updated successfully.');
+                loadSessions();
+
+            } catch (error) {
+                console.error(error);
+                alert('Something went wrong.');
+            }
+        }
+
+        loadSessions();
+    </script>
+
+</body>
+</html>

@@ -9,19 +9,22 @@ const authMiddleware = require('../middleware/authMiddleware');
 // Get all sessions for the logged-in student
 router.get('/', authMiddleware, async (req, res) => {
     try {
-        const userId = req.user.user_id;
-        const sessions = await Session.getUserSessions(userId);
+        const sessions = await Session.getUserSessions(
+            req.user.user_id
+        );
 
-        res.status(200).json({ sessions });
+        return res.status(200).json({ sessions });
+
     } catch (error) {
         console.error('Get sessions error:', error);
-        res.status(500).json({
+
+        return res.status(500).json({
             message: 'Could not load sessions.'
         });
     }
 });
 
-// Schedule a session for an accepted exchange request
+// Propose a session for an accepted exchange
 router.post('/', authMiddleware, async (req, res) => {
     try {
         const {
@@ -30,7 +33,9 @@ router.post('/', authMiddleware, async (req, res) => {
             description,
             sessionDate,
             startTime,
-            endTime
+            endTime,
+            meetingLocation,
+            meetingLink
         } = req.body;
 
         if (
@@ -51,7 +56,6 @@ router.post('/', authMiddleware, async (req, res) => {
             });
         }
 
-        // Find the exchange request and check that it was accepted
         const result = await pool.query(
             `SELECT requester_id, receiver_id, status
              FROM exchange_requests
@@ -83,7 +87,7 @@ router.post('/', authMiddleware, async (req, res) => {
             });
         }
 
-        // The requester is the learner; the receiver is the teacher
+        // Preserve the existing teacher and learner assignments.
         const session = await Session.createSession(
             requestId,
             request.receiver_id,
@@ -92,17 +96,67 @@ router.post('/', authMiddleware, async (req, res) => {
             description || '',
             sessionDate,
             startTime,
-            endTime
+            endTime,
+            userId,
+            meetingLocation || null,
+            meetingLink || null
         );
 
-        res.status(201).json({
-            message: 'Session scheduled successfully.',
+        return res.status(201).json({
+            message: 'Session proposal sent successfully.',
             session
         });
+
     } catch (error) {
         console.error('Schedule session error:', error);
-        res.status(500).json({
+
+        return res.status(500).json({
             message: 'Could not schedule session.'
+        });
+    }
+});
+
+// Confirm or decline a proposed session
+router.patch('/:id/status', authMiddleware, async (req, res) => {
+    try {
+        const sessionId = Number(req.params.id);
+        const userId = Number(req.user.user_id);
+        const { status } = req.body;
+
+        if (!Number.isInteger(sessionId) || sessionId <= 0) {
+            return res.status(400).json({
+                message: 'Invalid session ID.'
+            });
+        }
+
+        if (!['Confirmed', 'Declined'].includes(status)) {
+            return res.status(400).json({
+                message: 'Status must be Confirmed or Declined.'
+            });
+        }
+
+        const session = await Session.updateSessionStatus(
+            sessionId,
+            userId,
+            status
+        );
+
+        if (!session) {
+            return res.status(404).json({
+                message: 'Proposed session not found, or you cannot respond to it.'
+            });
+        }
+
+        return res.status(200).json({
+            message: `Session ${status.toLowerCase()} successfully.`,
+            session
+        });
+
+    } catch (error) {
+        console.error('Update session status error:', error);
+
+        return res.status(500).json({
+            message: 'Could not update session status.'
         });
     }
 });

@@ -98,6 +98,32 @@ const ExchangeRequest = {
         return result.rows;
     },
 
+    // Get contact details of the other student in an accepted exchange
+getOtherStudentContact: async (requestId, userId) => {
+    const result = await pool.query(
+        `SELECT
+            u.user_id,
+            u.name,
+            u.email,
+            u.phone_number
+         FROM exchange_requests er
+         JOIN users u
+           ON u.user_id = CASE
+               WHEN er.requester_id = $2 THEN er.receiver_id
+               ELSE er.requester_id
+           END
+         WHERE er.request_id = $1
+           AND er.status = 'Accepted'
+           AND (
+               er.requester_id = $2
+               OR er.receiver_id = $2
+           )`,
+        [requestId, userId]
+    );
+
+    return result.rows[0] || null;
+},
+
     // Accept or reject a pending request
     updateStatus: async (requestId, receiverId, status) => {
         const result = await pool.query(

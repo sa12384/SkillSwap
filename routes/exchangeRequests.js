@@ -80,6 +80,44 @@ router.get('/sent', authMiddleware, async (req, res) => {
     }
 });
 
+// View contact details of the other student
+router.get('/accepted/:id/contacts', authMiddleware, async (req, res) => {
+    try {
+        const requestId = Number(req.params.id);
+        const userId = req.user.user_id;
+
+        if (!Number.isInteger(requestId) || requestId <= 0) {
+            return res.status(400).json({
+                message: 'Invalid exchange request ID.'
+            });
+        }
+
+        const contact = await ExchangeRequest.getOtherStudentContact(
+            requestId,
+            userId
+        );
+
+        if (!contact) {
+            return res.status(404).json({
+                message: 'Accepted exchange request not found, or you are not part of this exchange.'
+            });
+        }
+
+        return res.status(200).json({
+            message: 'Contact details loaded successfully.',
+            contact
+        });
+
+    } catch (error) {
+        console.error('Get contact details error:', error);
+
+        return res.status(500).json({
+            message: 'Could not load contact details.'
+        });
+    }
+});
+
+
 // Accept or reject a request received by the logged-in student
 router.patch('/:id/status', authMiddleware, async (req, res) => {
     try {

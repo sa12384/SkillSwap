@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule Session | SkillSwap</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo">SkillSwap</div>
+
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/skills">Explore Skills</a>
+        <a href="/find-students">Find Students</a>
+        <a href="/requests">Requests</a>
+        <a href="/sessions">My Sessions</a>
+        <a href="/profile">Profile</a>
+    </div>
+</nav>
+
+<main class="skills-page">
+    <h1>Schedule a Skill Exchange Session</h1>
+    <p>Propose a suitable date and time for your skill exchange.</p>
+
+    <form id="sessionForm" class="skill-card">
+
+        <div class="form-group">
+            <label for="requestId">Accepted Exchange Request ID</label>
+            <input
+                type="number"
+                id="requestId"
+                name="requestId"
+                min="1"
+                required
+                placeholder="Enter accepted request ID">
+        </div>
+
+        <div class="form-group">
+            <label for="title">Session Title</label>
+            <input
+                type="text"
+                id="title"
+                name="title"
+                required
+                placeholder="e.g. Introduction to Photography">
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea
+                id="description"
+                name="description"
+                placeholder="What will you learn during this session?"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="sessionDate">Session Date</label>
+            <input
+                type="date"
+                id="sessionDate"
+                name="sessionDate"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label for="startTime">Start Time</label>
+            <input
+                type="time"
+                id="startTime"
+                name="startTime"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label for="endTime">End Time</label>
+            <input
+                type="time"
+                id="endTime"
+                name="endTime"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label for="meetingLocation">Meeting Location</label>
+            <input
+                type="text"
+                id="meetingLocation"
+                name="meetingLocation"
+                placeholder="e.g. College library">
+        </div>
+
+        <div class="form-group">
+            <label for="meetingLink">Online Meeting Link</label>
+            <input
+                type="url"
+                id="meetingLink"
+                name="meetingLink"
+                placeholder="https://meet.google.com/...">
+        </div>
+
+        <button type="submit">Propose Session</button>
+
+        <p id="message"></p>
+    </form>
+</main>
+
+<script>
+    const token = localStorage.getItem('token');
+
+    const form = document.getElementById('sessionForm');
+    const message = document.getElementById('message');
+
+    if (!token) {
+        message.textContent = 'Please log in first.';
+        form.querySelector('button').disabled = true;
+    }
+
+    // Get request ID from the URL if provided
+    const params = new URLSearchParams(window.location.search);
+    const requestId = params.get('requestId');
+
+    if (requestId) {
+        document.getElementById('requestId').value = requestId;
+    }
+
+    // Prevent selecting a past date
+    const today = new Date();
+    const localToday = new Date(
+        today.getTime() - today.getTimezoneOffset() * 60000
+    ).toISOString().split('T')[0];
+
+    document.getElementById('sessionDate').min = localToday;
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const data = {
+            requestId: document.getElementById('requestId').value,
+            title: document.getElementById('title').value,
+            description: document.getElementById('description').value,
+            sessionDate: document.getElementById('sessionDate').value,
+            startTime: document.getElementById('startTime').value,
+            endTime: document.getElementById('endTime').value,
+            meetingLocation: document.getElementById('meetingLocation').value,
+            meetingLink: document.getElementById('meetingLink').value
+        };
+
+        if (data.startTime >= data.endTime) {
+            message.textContent = 'End time must be later than start time.';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/sessions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer ' + token
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                message.textContent = result.message || 'Could not propose session.';
+                return;
+            }
+
+            message.textContent = result.message;
+
+            form.reset();
+
+        } catch (error) {
+            console.error('Schedule session error:', error);
+            message.textContent = 'Could not connect to the server.';
+        }
+    });
+</script>
+
+</body>
+</html>

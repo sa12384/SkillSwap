@@ -53,4 +53,14 @@ router.get('/reviews', (req, res) => {
     res.render('reviews');
 });
 
+
+router.get('/schedule-session', (req, res) => {
+    res.render('scheduleSession');
+});
+
+router.get('/sessions', (req, res) => {
+    res.render('mySessions');
+});
+
+
 module.exports = router;
