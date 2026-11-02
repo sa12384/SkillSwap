@@ -6,17 +6,33 @@ const User = require('../models/User');
 // Register a new student
 exports.register = async (req, res) => {
     try {
-        const { name, email, password, bio } = req.body;
+        const { name, email, phone, password, bio } = req.body;
 
         // Check required fields
-        if (!name || !email || !password) {
+        if (!name || !email || !phone || !password) {
             return res.status(400).json({
-                message: 'Name, email and password are required'
+                message: 'Name, email, phone number and password are required'
             });
         }
 
-        // Normalize email
+        // Normalize input
+        const normalizedName = name.trim();
         const normalizedEmail = email.trim().toLowerCase();
+        const normalizedPhone = phone.trim();
+
+        // Validate name
+        if (!normalizedName) {
+            return res.status(400).json({
+                message: 'Name is required'
+            });
+        }
+
+        // Validate phone number
+        if (normalizedPhone.length > 20) {
+            return res.status(400).json({
+                message: 'Phone number must not exceed 20 characters'
+            });
+        }
 
         // Check password length
         if (password.length < 8) {
@@ -39,12 +55,13 @@ exports.register = async (req, res) => {
         // Hash the password before saving
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create the account with the student role
+        // Create the account with phone number and student role
         const user = await User.createUser(
-            name,
+            normalizedName,
             normalizedEmail,
             hashedPassword,
             bio || '',
+            normalizedPhone,
             'student'
         );
 
@@ -154,6 +171,8 @@ exports.login = async (req, res) => {
                 user_id: user.user_id,
                 name: user.name,
                 email: user.email,
+                phone_number: user.phone_number,
+                bio: user.bio,
                 role: user.role
             }
         });
